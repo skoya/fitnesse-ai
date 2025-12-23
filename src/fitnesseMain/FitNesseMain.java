@@ -13,6 +13,8 @@ import fitnesse.socketservice.SslServerSocketFactory;
 import fitnesse.updates.WikiContentUpdater;
 import fitnesse.wiki.PathParser;
 import fitnesse.vertx.FitNesseVertxMain;
+import fitnesse.vertx.RunMonitor;
+import fitnesse.vertx.RunMonitorLogListener;
 import fitnesse.vertx.VertxConfig;
 import fitnesse.vertx.VertxConfigLoader;
 import io.vertx.core.Vertx;
@@ -30,6 +32,7 @@ public class FitNesseMain {
   private static final Logger LOG = Logger.getLogger(FitNesseMain.class.getName());
 
   private final ExitCodeListener exitCodeListener = new ExitCodeListener();
+  private RunMonitor runMonitor;
 
   public static void main(String[] args) {
     Arguments arguments = null;
@@ -77,8 +80,12 @@ public class FitNesseMain {
     ClassLoader classLoader = PluginsClassLoaderFactory.getClassLoader(contextConfigurator.get(ConfigurationParameter.ROOT_PATH));
     contextConfigurator.withClassLoader(classLoader);
 
+    boolean useVertx = !"false".equalsIgnoreCase(readFlag("FITNESSE_VERTX_WEB"));
     if (contextConfigurator.get(COMMAND) != null) {
       contextConfigurator.withTestSystemListener(exitCodeListener);
+    } else if (useVertx) {
+      runMonitor = new RunMonitor();
+      contextConfigurator.withTestSystemListener(new RunMonitorLogListener(runMonitor));
     }
 
     FitNesseContext context = contextConfigurator.makeFitNesseContext();
@@ -147,7 +154,8 @@ public class FitNesseMain {
           LOG.info("Starting FitNesse Vert.x web on port: " + context.port);
           Vertx vertx = FitNesseVertxMain.createVertx();
           VertxConfig cfg = VertxConfigLoader.load(vertx, VertxConfig.fromContext(context));
-          FitNesseVertxMain.startServer(vertx, cfg, context);
+          FitNesseVertxMain.startServer(vertx, cfg, context,
+            runMonitor == null ? new RunMonitor() : runMonitor);
         } else {
           if (!"true".equalsIgnoreCase(readFlag("FITNESSE_LEGACY_SOCKET"))) {
             LOG.severe("Legacy FitNesseServer/SocketService stack is retired. Enable FITNESSE_VERTX_WEB or set FITNESSE_LEGACY_SOCKET=true to force legacy startup.");

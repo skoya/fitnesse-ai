@@ -1,0 +1,40 @@
+name: Build FitNesse AI standalone jar
+
+on:
+  push:
+    branches: ["master"]
+    tags: ["v*"]
+  pull_request:
+
+jobs:
+  build-jar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Ensure Gradle wrapper is executable
+        run: chmod +x gradlew
+
+      - name: Build FitNesse AI standalone jar
+        run: ./gradlew --no-daemon fitnesseAiStandaloneJar
+
+      - name: Upload jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: fitnesse-ai-standalone
+          path: build/libs/fitnesse-ai-standalone-*.jar
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/libs/fitnesse-ai-standalone-*.jar

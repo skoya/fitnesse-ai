@@ -38,6 +38,23 @@ flowchart LR
 !2 vertx-config.json
 If !style_code(vertx-config.json) is missing at startup, the server writes a default file with the current settings so you can edit it directly. Environment variables still override values from the file.
 
+!2 Request timeouts
+The Vert.x !-TimeoutHandler-! enforces !style_code(FITNESSE_HTTP_TIMEOUT_MS) on normal wiki/page requests, but long-running suite/test runs skip the request timeout so the browser can stay attached to the stream. If you still see timeouts, raise !style_code(FITNESSE_HTTP_TIMEOUT_MS) and re-check the run monitor logs.
+
+!2 Run monitor and logs
+Use !style_code(/run-monitor) to see queue/running/completed counts and live debug logs while suites run. The log feed is also available as JSON from !style_code(/api/run/logs?since=0&limit=200).
+
+''UX update'': the run monitor now surfaces test system output and lifecycle events so you can see what is happening without tailing the server console.
+
+!mermaid
+flowchart LR
+  A[Suite/Test run] --> B[Test runner worker pool]
+  B --> C[/api/run/monitor]
+  B --> D[/api/run/logs]
+  C --> E[/run-monitor UI]
+  D --> E
+!endmermaid
+
 !2 Plugin loading (Vert.x)
 Plugins are loaded from !style_code(plugins.properties) and Java !-ServiceLoader-! providers. Vert.x plugins can register routes and adapters (MCP, AI, auth, etc.) via the Vert.x plugin registry so they can be enabled/disabled without code changes.
 

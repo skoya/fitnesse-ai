@@ -59,22 +59,23 @@ final class ResponderBusService {
                         WorkerExecutor executor, RunMonitor monitor, int maxQueue) {
     bus.consumer(address, message -> {
       JsonObject payload = (JsonObject) message.body();
+      String resource = payload.getString(HEADER_RESOURCE, "");
       if (monitor != null) {
         if (!monitor.canAccept(maxQueue)) {
           message.fail(429, "Test queue is full");
           return;
         }
-        monitor.incrementQueued();
+        monitor.incrementQueued(resource);
       }
       io.vertx.core.Handler<io.vertx.core.Promise<JsonObject>> work = promise -> {
-        long start = monitor == null ? 0 : monitor.startRun();
+        long start = monitor == null ? 0 : monitor.startRun(resource);
         try {
           promise.complete(handle(payload, responder));
         } catch (Exception e) {
           promise.fail(e);
         } finally {
           if (monitor != null) {
-            monitor.finishRun(start);
+            monitor.finishRun(start, resource);
           }
         }
       };

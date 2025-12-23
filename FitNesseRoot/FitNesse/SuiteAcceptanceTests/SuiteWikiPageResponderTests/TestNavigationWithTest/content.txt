@@ -15,8 +15,8 @@ Examine the requested page to ensure the correct links are displayed in the corr
 
 !| Response Examiner.                                                                        |
 |line                                                                               |inOrder?|
-|<a class="nav-link text-secondary" href="SomePage?test" accesskey="t">Test</a>     |true    |
-|<a class="nav-link text-secondary" href="SomePage?edit" accesskey="e">Edit</a>     |true    |
+|<a class="nav-link text-secondary" href="/SomePage?test" accesskey="t">Test</a>     |true    |
+|<a class="nav-link text-secondary" href="/SomePage/edit" accesskey="e">Edit</a>     |true    |
 |<a class="dropdown-item" href="SomePage?properties" accesskey="p">Properties</a>   |true    |
 |<a class="dropdown-item" href="SomePage?whereUsed" accesskey="w">Where Used</a>    |true    |
 |<a class="dropdown-item" href="SomePage?versions" accesskey="v">Versions</a>       |true    |

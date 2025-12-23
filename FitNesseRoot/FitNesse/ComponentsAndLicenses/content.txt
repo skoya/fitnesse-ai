@@ -7,7 +7,7 @@ FitNesse bundles additional libraries and UI assets. The lists below highlight k
 !2 Runtime libraries (selected)
 |Name|Version|Web-site|License|
 |Vert.x stack (core/web/web-client/auth-oauth2/config/grpc/micrometer)|4.5.13|https://vertx.io/|Apache License 2.0|
-|PlantUML|1.2024.8|https://plantuml.com/|GPL-3.0|
+|PlantUML|1.2024.8|https://plantuml.com/|Apache License 2.0|
 |Apache Velocity|2.4.1|https://velocity.apache.org/|Apache License 2.0|
 |Apache Commons Lang|3.19.0|https://commons.apache.org/proper/commons-lang/|Apache License 2.0|
 |Apache Commons Text|1.14.0|https://commons.apache.org/proper/commons-text/|Apache License 2.0|

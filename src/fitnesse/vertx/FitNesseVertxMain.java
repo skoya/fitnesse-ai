@@ -57,15 +57,21 @@ public final class FitNesseVertxMain {
   public static void main(String[] args) throws Exception {
     Vertx vertx = createVertx();
     VertxConfig config = VertxConfigLoader.load(vertx);
-    FitNesseContext context = buildContext(config);
-    startServer(vertx, config, context);
+    RunMonitor runMonitor = new RunMonitor();
+    RunMonitorLogListener logListener = new RunMonitorLogListener(runMonitor);
+    FitNesseContext context = buildContext(config, logListener);
+    startServer(vertx, config, context, runMonitor);
   }
 
-  private static FitNesseContext buildContext(VertxConfig config) throws IOException, PluginException {
+  private static FitNesseContext buildContext(VertxConfig config, fitnesse.testsystems.TestSystemListener testSystemListener)
+    throws IOException, PluginException {
     ContextConfigurator configurator = ContextConfigurator.systemDefaults()
       .withRootPath(config.rootPath())
       .withRootDirectoryName(config.rootDirectory());
     configurator.withParameter("wiki.root", "/wiki/");
+    if (testSystemListener != null) {
+      configurator.withTestSystemListener(testSystemListener);
+    }
 
     File configFile = Paths.get(config.rootPath(), ContextConfigurator.DEFAULT_CONFIG_FILE).toFile();
     configurator.updatedWith(ConfigurationParameter.loadProperties(configFile));
@@ -78,15 +84,22 @@ public final class FitNesseVertxMain {
     return configurator.makeFitNesseContext();
   }
 
-  public static void startServer(Vertx vertx, VertxConfig config, FitNesseContext context) {
+  public static void startServer(Vertx vertx, VertxConfig config, FitNesseContext context, RunMonitor runMonitor) {
     Router router = Router.router(vertx);
     router.route().handler(BodyHandler.create());
-    router.route().handler(TimeoutHandler.create(config.requestTimeoutMillis()));
+    TimeoutHandler timeoutHandler = TimeoutHandler.create(config.requestTimeoutMillis());
+    router.route().handler(ctx -> {
+      if (isLongRunningRequest(ctx)) {
+        ctx.next();
+      } else {
+        timeoutHandler.handle(ctx);
+      }
+    });
     router.route().handler(new VertxIdentityHandler());
 
     EventBus bus = vertx.eventBus();
     ResponderBusService busService = new ResponderBusService(vertx, context);
-    RunMonitor runMonitor = new RunMonitor(snapshot -> bus.publish("fitnesse.run.monitor", snapshot));
+    runMonitor.setOnUpdate(snapshot -> bus.publish("fitnesse.run.monitor", snapshot));
     busService.register(bus, "fitnesse.page.view", new WikiPageResponder());
     busService.register(bus, "fitnesse.page.edit", new EditResponder());
     busService.register(bus, "fitnesse.page.save", new SaveResponder());
@@ -544,6 +557,12 @@ public final class FitNesseVertxMain {
       ctx.response().putHeader("Content-Type", "application/json");
       ctx.response().end(runMonitor.snapshot().encode());
     });
+    router.get("/api/run/logs").handler(ctx -> {
+      long since = parseLong(ctx.request().getParam("since"), 0L);
+      int limit = parseInt(ctx.request().getParam("limit"), 200);
+      ctx.response().putHeader("Content-Type", "application/json");
+      ctx.response().end(runMonitor.logsSince(since, limit).encode());
+    });
     SockJSBridgeOptions ebOptions = new SockJSBridgeOptions()
       .addOutboundPermitted(new PermittedOptions().setAddress("fitnesse.run.monitor"));
     SockJSHandler sockJsHandler = SockJSHandler.create(vertx);
@@ -571,18 +590,76 @@ public final class FitNesseVertxMain {
 
     router.get("/run-monitor").handler(ctx -> {
       io.vertx.core.json.JsonObject snapshot = runMonitor.snapshot();
-      String html = "<html><head><title>Run Monitor</title>" +
-        "<style>body{font-family:sans-serif;margin:1.5rem;} .metric{font-size:1.2rem;} .bar{height:12px;background:#eaeaea;border-radius:6px;overflow:hidden;} .bar span{display:block;height:12px;background:#3b82f6;}</style>" +
-        "<script>async function refresh(){const res=await fetch('/api/run/monitor');const data=await res.json();document.getElementById('queued').innerText=data.queued;document.getElementById('running').innerText=data.running;document.getElementById('completed').innerText=data.completed;document.getElementById('avg').innerText=data.averageMillis;const total=data.queued+data.running;const pct=total===0?0:Math.min(100,Math.round(data.running/(total)*100));document.getElementById('bar').style.width=pct+'%';} setInterval(refresh,2000);window.onload=refresh;</script>" +
-        "</head><body>" +
-        "<h2>Run Monitor</h2>" +
-        "<div class='metric'>Queued: <span id='queued'>" + snapshot.getInteger("queued") + "</span></div>" +
-        "<div class='metric'>Running: <span id='running'>" + snapshot.getInteger("running") + "</span></div>" +
-        "<div class='metric'>Completed: <span id='completed'>" + snapshot.getLong("completed") + "</span></div>" +
-        "<div class='metric'>Average (ms): <span id='avg'>" + snapshot.getLong("averageMillis") + "</span></div>" +
-        "<div class='metric'>Utilization</div><div class='bar'><span id='bar' style='width:0%'></span></div>" +
-        "<p>Configured pool size: " + config.testPoolSize() + ", max queue: " + config.testMaxQueue() + "</p>" +
-        "</body></html>";
+      String html = String.format(java.util.Locale.ROOT, """
+        <html>
+        <head>
+          <title>Run Monitor</title>
+          <style>
+            body{font-family:sans-serif;margin:1.5rem;background:#f7f5f0;}
+            .metric{font-size:1.1rem;}
+            .bar{height:12px;background:#eaeaea;border-radius:6px;overflow:hidden;}
+            .bar span{display:block;height:12px;background:#3b82f6;}
+            .panel{margin-top:1.5rem;padding:1rem;background:#fff;border:1px solid #e0ddd4;border-radius:8px;}
+            .logs{height:320px;overflow:auto;background:#0b0d10;color:#e6edf3;padding:12px;border-radius:6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;white-space:pre-wrap;}
+            .tag{display:inline-block;padding:2px 6px;border-radius:4px;background:#efe9df;margin-left:6px;font-size:12px;}
+          </style>
+          <script>
+            let lastLogId = 0;
+            function fmt(entry) {
+              const ts = new Date(entry.timestamp).toLocaleTimeString();
+              const level = entry.level.toUpperCase();
+              const scope = [entry.resource || entry.testSystem].filter(Boolean).join(' ');
+              const prefix = scope ? (' [' + scope + ']') : '';
+              return ts + ' [' + level + ']' + prefix + ' ' + entry.message;
+            }
+            async function refresh() {
+              const res = await fetch('/api/run/monitor');
+              const data = await res.json();
+              document.getElementById('queued').innerText = data.queued;
+              document.getElementById('running').innerText = data.running;
+              document.getElementById('completed').innerText = data.completed;
+              document.getElementById('avg').innerText = data.averageMillis;
+              const total = data.queued + data.running;
+              const pct = total === 0 ? 0 : Math.min(100, Math.round(data.running / total * 100));
+              document.getElementById('bar').style.width = pct + '%%';
+            }
+            async function refreshLogs() {
+              const res = await fetch('/api/run/logs?since=' + lastLogId + '&limit=200');
+              const data = await res.json();
+              const logBox = document.getElementById('logs');
+              if (data.entries && data.entries.length) {
+                for (const entry of data.entries) {
+                  logBox.textContent += fmt(entry) + '\\n';
+                }
+                lastLogId = data.nextId || lastLogId;
+                logBox.scrollTop = logBox.scrollHeight;
+              }
+            }
+            setInterval(refresh, 2000);
+            setInterval(refreshLogs, 2000);
+            window.onload = () => { refresh(); refreshLogs(); };
+          </script>
+        </head>
+        <body>
+          <h2>Run Monitor</h2>
+          <div class='metric'>Queued: <span id='queued'>%d</span></div>
+          <div class='metric'>Running: <span id='running'>%d</span></div>
+          <div class='metric'>Completed: <span id='completed'>%d</span></div>
+          <div class='metric'>Average (ms): <span id='avg'>%d</span></div>
+          <div class='metric'>Utilization</div>
+          <div class='bar'><span id='bar' style='width:0%%'></span></div>
+          <div class='panel'><strong>Debug logs</strong><span class='tag'>/api/run/logs</span>
+          <div id='logs' class='logs'></div></div>
+          <p>Configured pool size: %d, max queue: %d</p>
+        </body>
+        </html>
+        """,
+        snapshot.getInteger("queued"),
+        snapshot.getInteger("running"),
+        snapshot.getLong("completed"),
+        snapshot.getLong("averageMillis"),
+        config.testPoolSize(),
+        config.testMaxQueue());
       ctx.response().putHeader("Content-Type", "text/html; charset=UTF-8").end(html);
     });
 
@@ -602,6 +679,10 @@ public final class FitNesseVertxMain {
           LOG.log(Level.SEVERE, "Failed to start FitNesse Vert.x server", result.cause());
         }
       });
+  }
+
+  public static void startServer(Vertx vertx, VertxConfig config, FitNesseContext context) {
+    startServer(vertx, config, context, new RunMonitor());
   }
 
   public static Vertx createVertx() {
@@ -653,6 +734,17 @@ public final class FitNesseVertxMain {
     }
   }
 
+  private static long parseLong(String value, long fallback) {
+    if (value == null || value.isEmpty()) {
+      return fallback;
+    }
+    try {
+      return Long.parseLong(value);
+    } catch (NumberFormatException e) {
+      return fallback;
+    }
+  }
+
   private static String resolvePageAddress(io.vertx.ext.web.RoutingContext ctx) {
     io.vertx.core.MultiMap params = ctx.request().params();
     if (params.contains("suite")) {
@@ -671,6 +763,22 @@ public final class FitNesseVertxMain {
     }
     String responder = params.get("responder");
     return responder != null && "edit".equalsIgnoreCase(responder);
+  }
+
+  private static boolean isLongRunningRequest(io.vertx.ext.web.RoutingContext ctx) {
+    String path = ctx.request().path();
+    if ("/run".equals(path)) {
+      return true;
+    }
+    if (path != null && path.startsWith("/wiki/")) {
+      io.vertx.core.MultiMap params = ctx.request().params();
+      if (params.contains("suite") || params.contains("test")) {
+        return true;
+      }
+      String responder = params.get("responder");
+      return responder != null && "run".equalsIgnoreCase(responder);
+    }
+    return false;
   }
 
   private static io.vertx.core.eventbus.DeliveryOptions deliveryOptions(String address) {

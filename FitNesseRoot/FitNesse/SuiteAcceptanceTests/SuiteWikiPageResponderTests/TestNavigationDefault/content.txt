@@ -15,7 +15,7 @@ Examine the requested page to ensure the correct links are displayed in the corr
 
 !| Response Examiner.                                                                              |
 |line                                                                                     |inOrder?|
-|<li><a class="nav-link text-secondary" href="SomePage?edit" accesskey="e">Edit</a></li>  |true    |
+|<li><a class="nav-link text-secondary" href="/SomePage/edit" accesskey="e">Edit</a></li>  |true    |
 |<li><a class="dropdown-item" href="SomePage?properties" accesskey="p">Properties</a></li>|true    |
 |<li><a class="dropdown-item" href="SomePage?whereUsed" accesskey="w">Where Used</a></li> |true    |
 |<li><a class="dropdown-item" href="SomePage?versions" accesskey="v">Versions</a></li>    |true    |

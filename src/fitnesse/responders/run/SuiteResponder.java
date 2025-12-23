@@ -259,6 +259,9 @@ public class SuiteResponder extends ChunkingResponder implements SecureResponder
     }
     if (context.testSystemListener != null) {
       runner.addTestSystemListener(context.testSystemListener);
+      if (context.testSystemListener instanceof ExecutionLogListener) {
+        runner.addExecutionLogListener((ExecutionLogListener) context.testSystemListener);
+      }
     }
   }
 

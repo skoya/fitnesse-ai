@@ -20,6 +20,7 @@ import static java.lang.String.format;
 
 public class HistoryPurger {
   private static final Logger LOG = Logger.getLogger(HistoryPurger.class.getName());
+  private static final String ARTIFACTS_DIR_NAME = "artifacts";
 
   private final File resultsDirectory;
   private final Date expirationDate;
@@ -92,7 +93,9 @@ public class HistoryPurger {
 
   private void deleteDirectory(File file) throws IOException {
     File[] files = FileUtil.listFiles(file);
-    if(testhistoryCount != null) {
+    if (ARTIFACTS_DIR_NAME.equals(file.getName())) {
+      deleteArtifactDirectories(files);
+    } else if (testhistoryCount != null) {
       deleteFilesIfCountReached(files);
     } else {
       deleteExpiredFiles(files);
@@ -104,31 +107,53 @@ public class HistoryPurger {
 
   private void deleteFileIfExpired(File file) throws IOException {
     String name = file.getName();
+    if (!PageHistoryReader.matchesPageHistoryFileFormat(name)) {
+      return;
+    }
     Date date = getDateFromPageHistoryFileName(name);
-    if (date.getTime() < expirationDate.getTime())
+    if (date != null && date.getTime() < expirationDate.getTime())
       FileUtil.deleteFile(file);
   }
 
   private void deleteFilesIfCountReached(File[] files) throws IOException {
+    File[] historyFiles = Arrays.stream(files)
+      .filter(this::isHistoryFile)
+      .toArray(File[]::new);
     // Only delete histories when there are more histories than the count expects
-    if((files.length - this.testhistoryCount) > 0) {
+    if ((historyFiles.length - this.testhistoryCount) > 0) {
       // Sorting the files to have them in ascending order of creation
-      Arrays.sort(files, Comparator.comparing(file -> getDateFromPageHistoryFileName(file.getName()), Date::compareTo));
-      File[] filesToDelete = new File[files.length - this.testhistoryCount];
+      Arrays.sort(historyFiles, Comparator.comparing(file -> getDateFromPageHistoryFileName(file.getName()), Date::compareTo));
+      File[] filesToDelete = new File[historyFiles.length - this.testhistoryCount];
 
-      System.arraycopy(files, 0, filesToDelete, 0, files.length - this.testhistoryCount);
+      System.arraycopy(historyFiles, 0, filesToDelete, 0, historyFiles.length - this.testhistoryCount);
       for (File fileToDelete : filesToDelete) {
         FileUtil.deleteFile(fileToDelete);
       }
     }
   }
 
+  private void deleteArtifactDirectories(File[] files) throws IOException {
+    for (File file : files) {
+      if (!file.isDirectory()) {
+        continue;
+      }
+      Date date = getDateFromPageHistoryFileName(file.getName());
+      if (date != null && date.getTime() < expirationDate.getTime()) {
+        FileUtil.deleteFileSystemDirectory(file);
+      }
+    }
+  }
+
+  private boolean isHistoryFile(File file) {
+    return !file.isDirectory() && PageHistoryReader.matchesPageHistoryFileFormat(file.getName());
+  }
+
   private Date getDateFromPageHistoryFileName(String name) {
     try {
       return tryExtractDateFromTestHistoryName(name);
     } catch (ParseException e) {
-      LOG.log(Level.INFO, format("Can not determine date from test history file %s", name));
-      return new Date();
+      LOG.log(Level.FINE, format("Skipping non-history entry in test results: %s", name));
+      return null;
     }
   }
 

@@ -285,6 +285,7 @@ task run(type: JavaExec) {
   dependsOn classes, copyRuntimeLibs
   classpath = sourceSets.main.runtimeClasspath
   mainClass = "fitnesseMain.FitNesseMain"
+  systemProperty "slim.port", "0"
   args "-p", "8001", "-e", "0"
 }
 
@@ -360,6 +361,7 @@ task acceptanceTest(type: JavaExec) {
   onlyIf { test.didWork }
   classpath = standaloneJar.outputs.files
   mainClass = "fitnesseMain.FitNesseMain"
+  systemProperty "slim.port", "0"
   args "-o", "-c", "FitNesse.SuiteAcceptanceTests?suite&format=text"
 }
 

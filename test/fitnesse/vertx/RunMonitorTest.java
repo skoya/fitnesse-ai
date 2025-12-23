@@ -13,12 +13,12 @@ public class RunMonitorTest {
   public void tracksQueuedRunningCompletedAndAverage() throws Exception {
     RunMonitor monitor = new RunMonitor();
     assertThat(monitor.canAccept(1), is(true));
-    monitor.incrementQueued();
+    monitor.incrementQueued("FrontPage");
     assertThat(monitor.snapshot().getInteger("queued"), is(1));
 
-    long start = monitor.startRun();
+    long start = monitor.startRun("FrontPage");
     Thread.sleep(5);
-    monitor.finishRun(start);
+    monitor.finishRun(start, "FrontPage");
 
     JsonObject snap = monitor.snapshot();
     assertThat(snap.getInteger("queued"), is(0));
@@ -31,7 +31,7 @@ public class RunMonitorTest {
   public void respectsMaxQueue() {
     RunMonitor monitor = new RunMonitor();
     assertThat(monitor.canAccept(1), is(true));
-    monitor.incrementQueued();
+    monitor.incrementQueued("FrontPage");
     assertThat(monitor.canAccept(1), is(false));
     assertThat(monitor.canAccept(0), is(true)); // unlimited when <=0
   }
