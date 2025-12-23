@@ -1,7 +1,6 @@
 package fitnesse.ai;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.OpenOptions;
@@ -31,100 +30,60 @@ public final class AiWorkflowService {
    * Lists stored workflows (id + name only).
    */
   public Future<JsonArray> list() {
-    Promise<JsonArray> promise = Promise.promise();
-    vertx.fileSystem().mkdirs(workflowDir.toString(), mkdirAr -> {
-      if (mkdirAr.failed()) {
-        promise.fail(mkdirAr.cause());
-        return;
-      }
-      vertx.fileSystem().readDir(workflowDir.toString(), readAr -> {
-        if (readAr.failed()) {
-          promise.fail(readAr.cause());
-          return;
-        }
+    return vertx.fileSystem().mkdirs(workflowDir.toString())
+      .compose(ignored -> vertx.fileSystem().readDir(workflowDir.toString()))
+      .compose(paths -> {
         List<Future<JsonObject>> reads = new ArrayList<>();
-        for (String path : readAr.result()) {
-          Promise<JsonObject> itemPromise = Promise.promise();
-          vertx.fileSystem().readFile(path, fileAr -> {
-            if (fileAr.failed()) {
-              itemPromise.complete(new JsonObject());
-              return;
-            }
-            JsonObject json = fileAr.result().toJsonObject();
-            itemPromise.complete(new JsonObject()
-              .put("id", json.getString("id", ""))
-              .put("name", json.getString("name", "")));
-          });
-          reads.add(itemPromise.future());
+        for (String path : paths) {
+          Future<JsonObject> read = vertx.fileSystem().readFile(path)
+            .map(buffer -> {
+              JsonObject json = buffer.toJsonObject();
+              return new JsonObject()
+                .put("id", json.getString("id", ""))
+                .put("name", json.getString("name", ""));
+            })
+            .recover(err -> Future.succeededFuture(new JsonObject()));
+          reads.add(read);
         }
-        Future.join(new ArrayList<>(reads)).onComplete(done -> {
+        return Future.join(new ArrayList<>(reads)).map(done -> {
           JsonArray array = new JsonArray();
-          for (Future<JsonObject> future : reads) {
-            JsonObject item = future.result();
+          for (int i = 0; i < reads.size(); i++) {
+            JsonObject item = (JsonObject) done.resultAt(i);
             if (item != null && !item.getString("id", "").isEmpty()) {
               array.add(item);
             }
           }
-          promise.complete(array);
+          return array;
         });
       });
-    });
-    return promise.future();
   }
 
   /**
    * Loads a workflow by id.
    */
   public Future<AiWorkflow> load(String id) {
-    Promise<AiWorkflow> promise = Promise.promise();
     if (id == null || id.isEmpty()) {
-      promise.fail("id required");
-      return promise.future();
+      return Future.failedFuture("id required");
     }
     Path path = workflowDir.resolve(id + ".json");
-    vertx.fileSystem().readFile(path.toString(), ar -> {
-      if (ar.failed()) {
-        promise.fail(ar.cause());
-      } else {
-        promise.complete(AiWorkflow.fromJson(ar.result().toJsonObject()));
-      }
-    });
-    return promise.future();
+    return vertx.fileSystem().readFile(path.toString())
+      .map(buffer -> AiWorkflow.fromJson(buffer.toJsonObject()));
   }
 
   /**
    * Persists a workflow definition.
    */
   public Future<AiWorkflow> save(AiWorkflow workflow) {
-    Promise<AiWorkflow> promise = Promise.promise();
     if (workflow == null || workflow.id() == null || workflow.id().isEmpty()) {
-      promise.fail("id required");
-      return promise.future();
+      return Future.failedFuture("id required");
     }
-    vertx.fileSystem().mkdirs(workflowDir.toString(), mkdirAr -> {
-      if (mkdirAr.failed()) {
-        promise.fail(mkdirAr.cause());
-        return;
-      }
-      Path path = workflowDir.resolve(workflow.id() + ".json");
-      Buffer buffer = Buffer.buffer(workflow.toJson().encodePrettily(), StandardCharsets.UTF_8.name());
-      OpenOptions options = new OpenOptions().setCreate(true).setWrite(true).setTruncateExisting(true);
-      vertx.fileSystem().open(path.toString(), options, openAr -> {
-        if (openAr.failed()) {
-          promise.fail(openAr.cause());
-          return;
-        }
-        openAr.result().write(buffer, writeAr -> {
-          openAr.result().close();
-          if (writeAr.failed()) {
-            promise.fail(writeAr.cause());
-          } else {
-            promise.complete(workflow);
-          }
-        });
-      });
-    });
-    return promise.future();
+    Path path = workflowDir.resolve(workflow.id() + ".json");
+    Buffer buffer = Buffer.buffer(workflow.toJson().encodePrettily(), StandardCharsets.UTF_8.name());
+    OpenOptions options = new OpenOptions().setCreate(true).setWrite(true).setTruncateExisting(true);
+    return vertx.fileSystem().mkdirs(workflowDir.toString())
+      .compose(ignored -> vertx.fileSystem().open(path.toString(), options))
+      .compose(file -> file.write(buffer, file.getWritePos()).compose(ignored -> file.close()))
+      .map(ignored -> workflow);
   }
 
   /**
@@ -179,30 +138,25 @@ public final class AiWorkflowService {
    * Returns recent run history for a workflow.
    */
   public Future<JsonArray> listRuns(String workflowId, int limit) {
-    Promise<JsonArray> promise = Promise.promise();
     if (workflowId == null || workflowId.isEmpty()) {
-      promise.complete(new JsonArray());
-      return promise.future();
+      return Future.succeededFuture(new JsonArray());
     }
     Path runPath = workflowDir.resolve(workflowId + "-runs.jsonl");
-    vertx.fileSystem().readFile(runPath.toString(), ar -> {
-      if (ar.failed()) {
-        promise.complete(new JsonArray());
-        return;
-      }
-      String content = ar.result().toString(StandardCharsets.UTF_8);
-      String[] lines = content.split("\\r?\\n");
-      JsonArray runs = new JsonArray();
-      int start = Math.max(0, lines.length - limit);
-      for (int i = start; i < lines.length; i++) {
-        String line = lines[i].trim();
-        if (!line.isEmpty()) {
-          runs.add(new JsonObject(line));
+    return vertx.fileSystem().readFile(runPath.toString())
+      .map(buffer -> {
+        String content = buffer.toString(StandardCharsets.UTF_8);
+        String[] lines = content.split("\\r?\\n");
+        JsonArray runs = new JsonArray();
+        int start = Math.max(0, lines.length - limit);
+        for (int i = start; i < lines.length; i++) {
+          String line = lines[i].trim();
+          if (!line.isEmpty()) {
+            runs.add(new JsonObject(line));
+          }
         }
-      }
-      promise.complete(runs);
-    });
-    return promise.future();
+        return runs;
+      })
+      .recover(err -> Future.succeededFuture(new JsonArray()));
   }
 
   private Future<Void> appendRun(String workflowId, AiWorkflowRunResult result) {
@@ -210,26 +164,11 @@ public final class AiWorkflowService {
       return Future.succeededFuture();
     }
     Path runPath = workflowDir.resolve(workflowId + "-runs.jsonl");
-    return vertx.fileSystem().mkdirs(workflowDir.toString()).compose(ignored -> {
-      OpenOptions options = new OpenOptions().setCreate(true).setWrite(true).setAppend(true);
-      Buffer buffer = Buffer.buffer(result.toJson().encode() + "\n", StandardCharsets.UTF_8.name());
-      Promise<Void> promise = Promise.promise();
-      vertx.fileSystem().open(runPath.toString(), options, openAr -> {
-        if (openAr.failed()) {
-          promise.fail(openAr.cause());
-          return;
-        }
-        openAr.result().write(buffer, writeAr -> {
-          openAr.result().close();
-          if (writeAr.failed()) {
-            promise.fail(writeAr.cause());
-          } else {
-            promise.complete();
-          }
-        });
-      });
-      return promise.future();
-    });
+    OpenOptions options = new OpenOptions().setCreate(true).setWrite(true).setAppend(true);
+    Buffer buffer = Buffer.buffer(result.toJson().encode() + "\n", StandardCharsets.UTF_8.name());
+    return vertx.fileSystem().mkdirs(workflowDir.toString())
+      .compose(ignored -> vertx.fileSystem().open(runPath.toString(), options))
+      .compose(file -> file.write(buffer, file.getWritePos()).compose(ignored -> file.close()));
   }
 
   /**

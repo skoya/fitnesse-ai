@@ -37,13 +37,14 @@ class VertxConcurrentLoadTest {
     Router router = Router.router(vertx);
     router.get("/wiki/*").handler(rc -> {
       String resource = rc.request().path().substring("/wiki/".length());
-      bus.request("fitnesse.page.view", busService.buildPayload(rc, resource), ar -> {
-        if (ar.succeeded()) {
-          busService.writeResponse(rc, (io.vertx.core.json.JsonObject) ar.result().body());
-        } else {
-          rc.response().setStatusCode(500).end("EventBus error: " + ar.cause().getMessage());
-        }
-      });
+      bus.request("fitnesse.page.view", busService.buildPayload(rc, resource))
+        .onComplete(ar -> {
+          if (ar.succeeded()) {
+            busService.writeResponse(rc, (io.vertx.core.json.JsonObject) ar.result().body());
+          } else {
+            rc.response().setStatusCode(500).end("EventBus error: " + ar.cause().getMessage());
+          }
+        });
     });
 
     vertx.createHttpServer()
@@ -63,7 +64,7 @@ class VertxConcurrentLoadTest {
         for (int user = 0; user < users; user++) {
           for (int i = 0; i < requestsPerUser; i++) {
             long start = System.nanoTime();
-            client.get(port, "localhost", "/wiki/FrontPage").send(ar -> {
+            client.get(port, "localhost", "/wiki/FrontPage").send().onComplete(ar -> {
               long elapsedMillis = (System.nanoTime() - start) / 1_000_000L;
               latencies.add(elapsedMillis);
               totalLatencyMillis.addAndGet(elapsedMillis);

@@ -51,8 +51,9 @@ public class SearchBusServiceTest {
       .put("tags", "smoke")
       .put("pageType", "suite")
       .put("limit", 1)
-      .put("offset", 0), testContext.succeeding(ar -> {
-        JsonObject body = (JsonObject) ar.body();
+      .put("offset", 0))
+      .onComplete(testContext.succeeding(message -> {
+        JsonObject body = (JsonObject) message.body();
         JsonArray results = body.getJsonArray("results");
         testContext.verify(() -> {
           org.junit.jupiter.api.Assertions.assertEquals(1, results.size());

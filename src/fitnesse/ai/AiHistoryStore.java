@@ -26,39 +26,20 @@ public final class AiHistoryStore {
    * Appends a request/response pair as a JSON line.
    */
   public Future<Void> append(AiRequest request, AiResponse response) {
-    Promise<Void> promise = Promise.promise();
     Path parent = historyFile.getParent();
-    vertx.fileSystem().mkdirs(parent.toString(), mkdirAr -> {
-      if (mkdirAr.failed()) {
-        promise.fail(mkdirAr.cause());
-        return;
-      }
-      OpenOptions options = new OpenOptions().setCreate(true).setWrite(true).setAppend(true);
-    vertx.fileSystem().open(historyFile.toString(), options, openAr -> {
-        if (openAr.failed()) {
-          promise.fail(openAr.cause());
-          return;
-        }
-        JsonObject entry = new JsonObject()
-          .put("prompt", request.prompt())
-          .put("grounding", request.grounding())
-          .put("tool", request.tool())
-          .put("parameters", request.parameters())
-          .put("conversationId", request.conversationId())
-          .put("requestedAt", request.timestamp().toString())
-          .put("response", response.response())
-          .put("respondedAt", response.timestamp().toString());
-        Buffer buffer = Buffer.buffer(entry.encode() + "\n", StandardCharsets.UTF_8.name());
-        openAr.result().write(buffer, writeAr -> {
-          openAr.result().close();
-          if (writeAr.failed()) {
-            promise.fail(writeAr.cause());
-          } else {
-            promise.complete();
-          }
-        });
-      });
-    });
-    return promise.future();
+    OpenOptions options = new OpenOptions().setCreate(true).setWrite(true).setAppend(true);
+    JsonObject entry = new JsonObject()
+      .put("prompt", request.prompt())
+      .put("grounding", request.grounding())
+      .put("tool", request.tool())
+      .put("parameters", request.parameters())
+      .put("conversationId", request.conversationId())
+      .put("requestedAt", request.timestamp().toString())
+      .put("response", response.response())
+      .put("respondedAt", response.timestamp().toString());
+    Buffer buffer = Buffer.buffer(entry.encode() + "\n", StandardCharsets.UTF_8.name());
+    return vertx.fileSystem().mkdirs(parent.toString())
+      .compose(ignored -> vertx.fileSystem().open(historyFile.toString(), options))
+      .compose(file -> file.write(buffer, file.getWritePos()).compose(ignored -> file.close()));
   }
 }

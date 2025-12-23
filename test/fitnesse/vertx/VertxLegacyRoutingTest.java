@@ -59,7 +59,7 @@ class VertxLegacyRoutingTest {
 
         AtomicInteger remaining = new AtomicInteger(3);
 
-        client.get(port, "localhost", "/files/").send(ar -> {
+        client.get(port, "localhost", "/files/").send().onComplete(ar -> {
           ctx.verify(() -> {
             assertTrue(ar.succeeded());
             var response = ar.result();
@@ -70,7 +70,7 @@ class VertxLegacyRoutingTest {
           completeIfDone(ctx, remaining, server, context);
         });
 
-        client.get(port, "localhost", "/files/sample.txt").send(ar -> {
+        client.get(port, "localhost", "/files/sample.txt").send().onComplete(ar -> {
           ctx.verify(() -> {
             assertTrue(ar.succeeded());
             var response = ar.result();
@@ -80,7 +80,7 @@ class VertxLegacyRoutingTest {
           completeIfDone(ctx, remaining, server, context);
         });
 
-        client.get(port, "localhost", "/RecentChanges").send(ar -> {
+        client.get(port, "localhost", "/RecentChanges").send().onComplete(ar -> {
           ctx.verify(() -> {
             assertTrue(ar.succeeded());
             var response = ar.result();
@@ -98,13 +98,14 @@ class VertxLegacyRoutingTest {
     String resource = ctx.request().path().startsWith("/files")
       ? ctx.request().path().substring(1)
       : ctx.request().path();
-    bus.request("fitnesse.files", busService.buildPayload(ctx, resource), ar -> {
-      if (ar.succeeded()) {
-        busService.writeResponse(ctx, (io.vertx.core.json.JsonObject) ar.result().body());
-      } else {
-        ctx.response().setStatusCode(500).end("EventBus error: " + ar.cause().getMessage());
-      }
-    });
+    bus.request("fitnesse.files", busService.buildPayload(ctx, resource))
+      .onComplete(ar -> {
+        if (ar.succeeded()) {
+          busService.writeResponse(ctx, (io.vertx.core.json.JsonObject) ar.result().body());
+        } else {
+          ctx.response().setStatusCode(500).end("EventBus error: " + ar.cause().getMessage());
+        }
+      });
   }
 
   private static boolean isReservedPath(String path) {

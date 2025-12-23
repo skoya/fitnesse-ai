@@ -36,17 +36,20 @@ public class AiWorkflowBusServiceTest {
     AiWorkflowNode node = new AiWorkflowNode("n1", "Hello", "assist", "", false, "", Map.of(), "Hello", 40, 40);
     AiWorkflow workflow = new AiWorkflow("wf1", "Workflow 1", List.of(node), new JsonArray());
 
-    vertx.eventBus().request(AiWorkflowBusService.ADDRESS_SAVE, workflow.toJson(), testContext.succeeding(saveAr -> {
-      JsonObject payload = new JsonObject().put("workflow", workflow.toJson());
-      vertx.eventBus().request(AiWorkflowBusService.ADDRESS_RUN, payload, testContext.succeeding(runAr -> {
-        JsonObject runsPayload = new JsonObject().put("id", "wf1").put("limit", 5);
-        vertx.eventBus().request(AiWorkflowBusService.ADDRESS_RUNS, runsPayload, testContext.succeeding(runsAr -> {
-          JsonObject result = (JsonObject) runsAr.body();
-          testContext.verify(() ->
-            org.junit.jupiter.api.Assertions.assertTrue(result.getJsonArray("runs").size() >= 1));
-          testContext.completeNow();
-        }));
+    vertx.eventBus().request(AiWorkflowBusService.ADDRESS_SAVE, workflow.toJson())
+      .onComplete(testContext.succeeding(saveMessage -> {
+        JsonObject payload = new JsonObject().put("workflow", workflow.toJson());
+        vertx.eventBus().request(AiWorkflowBusService.ADDRESS_RUN, payload)
+          .onComplete(testContext.succeeding(runMessage -> {
+            JsonObject runsPayload = new JsonObject().put("id", "wf1").put("limit", 5);
+            vertx.eventBus().request(AiWorkflowBusService.ADDRESS_RUNS, runsPayload)
+              .onComplete(testContext.succeeding(runsMessage -> {
+                JsonObject result = (JsonObject) runsMessage.body();
+                testContext.verify(() ->
+                  org.junit.jupiter.api.Assertions.assertTrue(result.getJsonArray("runs").size() >= 1));
+                testContext.completeNow();
+              }));
+          }));
       }));
-    }));
   }
 }

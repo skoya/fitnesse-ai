@@ -32,8 +32,9 @@ public class AiBusServiceTest {
       .put("prompt", "Hello")
       .put("conversationId", "c-1")
       .put("grounding", new JsonArray().add("doc-1"));
-    vertx.eventBus().request(AiBusService.ADDRESS_ASSIST, payload, testContext.succeeding(ar -> {
-      JsonObject body = (JsonObject) ar.body();
+    vertx.eventBus().request(AiBusService.ADDRESS_ASSIST, payload)
+      .onComplete(testContext.succeeding(message -> {
+        JsonObject body = (JsonObject) message.body();
       testContext.verify(() -> {
         org.junit.jupiter.api.Assertions.assertEquals("c-1", body.getString("conversationId"));
         org.junit.jupiter.api.Assertions.assertTrue(body.getString("response").contains("Hello"));
@@ -45,11 +46,11 @@ public class AiBusServiceTest {
           org.junit.jupiter.api.Assertions.assertTrue(Files.exists(history));
           org.junit.jupiter.api.Assertions.assertTrue(Files.readString(history).contains("Hello"));
         });
-        testContext.completeNow();
-      } catch (Exception e) {
-        testContext.failNow(e);
-      }
-    }));
+          testContext.completeNow();
+        } catch (Exception e) {
+          testContext.failNow(e);
+        }
+      }));
   }
 
   @Test
@@ -64,11 +65,12 @@ public class AiBusServiceTest {
       .put("prompt", "Generate a test")
       .put("tool", "test-gen")
       .put("params", new JsonObject().put("pagePath", "SuiteOne.TestOne").put("fixture", "MyFixture"));
-    vertx.eventBus().request(AiBusService.ADDRESS_ASSIST, payload, testContext.succeeding(ar -> {
-      JsonObject body = (JsonObject) ar.body();
+    vertx.eventBus().request(AiBusService.ADDRESS_ASSIST, payload)
+      .onComplete(testContext.succeeding(message -> {
+        JsonObject body = (JsonObject) message.body();
       testContext.verify(() ->
         org.junit.jupiter.api.Assertions.assertTrue(body.getString("response").contains("Test generation stub")));
       testContext.completeNow();
-    }));
+      }));
   }
 }

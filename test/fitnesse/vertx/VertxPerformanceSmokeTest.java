@@ -33,13 +33,14 @@ class VertxPerformanceSmokeTest {
     Router router = Router.router(vertx);
     router.get("/wiki/*").handler(rc -> {
       String resource = rc.request().path().substring("/wiki/".length());
-      bus.request("fitnesse.page.view", busService.buildPayload(rc, resource), ar -> {
-        if (ar.succeeded()) {
-          busService.writeResponse(rc, (io.vertx.core.json.JsonObject) ar.result().body());
-        } else {
-          rc.response().setStatusCode(500).end("EventBus error: " + ar.cause().getMessage());
-        }
-      });
+      bus.request("fitnesse.page.view", busService.buildPayload(rc, resource))
+        .onComplete(ar -> {
+          if (ar.succeeded()) {
+            busService.writeResponse(rc, (io.vertx.core.json.JsonObject) ar.result().body());
+          } else {
+            rc.response().setStatusCode(500).end("EventBus error: " + ar.cause().getMessage());
+          }
+        });
     });
 
     vertx.createHttpServer()
@@ -53,7 +54,7 @@ class VertxPerformanceSmokeTest {
         long start = System.nanoTime();
 
         for (int i = 0; i < requestCount; i++) {
-          client.get(port, "localhost", "/wiki/FrontPage").send(ar -> {
+          client.get(port, "localhost", "/wiki/FrontPage").send().onComplete(ar -> {
             ctx.verify(() -> {
               assertTrue(ar.succeeded());
               assertEquals(200, ar.result().statusCode());

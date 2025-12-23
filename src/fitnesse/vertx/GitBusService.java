@@ -43,7 +43,7 @@ final class GitBusService {
         message.reply(cached.getJsonObject("payload"));
         return;
       }
-      vertx.executeBlocking(promise -> {
+      vertx.executeBlocking(() -> {
         PageHistory history = historyService.history(new PageRef(path), new HistoryQuery(limit));
         JsonArray entries = new JsonArray();
         for (PageHistoryEntry entry : history.entries()) {
@@ -55,8 +55,8 @@ final class GitBusService {
           json.put("timestamp", entry.timestamp().toString());
           entries.add(json);
         }
-        promise.complete(new JsonObject().put("entries", entries));
-      }, false, ar -> {
+        return new JsonObject().put("entries", entries);
+      }, false).onComplete(ar -> {
         if (ar.succeeded()) {
           JsonObject payloadJson = (JsonObject) ar.result();
           cache.put(cacheKey, cacheEntry(payloadJson));
@@ -81,10 +81,10 @@ final class GitBusService {
         message.reply(cached.getJsonObject("payload"));
         return;
       }
-      vertx.executeBlocking(promise -> {
+      vertx.executeBlocking(() -> {
         String diff = historyService.diff(new PageRef(path), commitId);
-        promise.complete(new JsonObject().put("diff", diff));
-      }, false, ar -> {
+        return new JsonObject().put("diff", diff);
+      }, false).onComplete(ar -> {
         if (ar.succeeded()) {
           JsonObject payloadJson = (JsonObject) ar.result();
           cache.put(cacheKey, cacheEntry(payloadJson));
@@ -104,16 +104,16 @@ final class GitBusService {
         return;
       }
       String lockKey = "fitnesse.git.revert:" + path;
-      vertx.sharedData().getLocalLock(lockKey, lockResult -> {
+      vertx.sharedData().getLocalLock(lockKey).onComplete(lockResult -> {
         if (lockResult.failed()) {
           message.fail(500, lockResult.cause().getMessage());
           return;
         }
         Lock lock = lockResult.result();
-        vertx.executeBlocking(promise -> {
+        vertx.executeBlocking(() -> {
           historyService.revert(new PageRef(path), commitId);
-          promise.complete();
-        }, false, ar -> {
+          return null;
+        }, false).onComplete(ar -> {
           lock.release();
           if (ar.succeeded()) {
             clearCacheForPath(path);

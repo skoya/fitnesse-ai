@@ -14,6 +14,7 @@ import fitnesse.search.SearchResult;
 import io.grpc.ServerInterceptors;
 import io.grpc.ServerServiceDefinition;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.grpc.VertxServer;
 import io.vertx.grpc.VertxServerBuilder;
@@ -45,7 +46,9 @@ public final class McpGrpcServer {
       .forAddress(vertx, "0.0.0.0", port)
       .addService(intercepted)
       .build();
-    server.start(ar -> {
+    Promise<Void> startPromise = Promise.promise();
+    server.start(startPromise);
+    startPromise.future().onComplete(ar -> {
       if (ar.succeeded()) {
         LOG.info("MCP gRPC server listening on port " + port);
       } else {

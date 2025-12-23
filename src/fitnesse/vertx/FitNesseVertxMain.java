@@ -147,7 +147,8 @@ public final class FitNesseVertxMain {
     router.get("/wiki/*").handler(ctx -> {
       if (isEditQuery(ctx)) {
         String resource = resourceFrom(pathAfter(ctx.request().path(), "/wiki/"));
-        bus.request("fitnesse.page.edit", busService.buildPayload(ctx, resource), deliveryOptions("fitnesse.page.edit"), ar -> {
+        bus.request("fitnesse.page.edit", busService.buildPayload(ctx, resource), deliveryOptions("fitnesse.page.edit"))
+          .onComplete(ar -> {
           if (ar.succeeded()) {
             busService.writeResponse(ctx, (io.vertx.core.json.JsonObject) ar.result().body());
           } else {
@@ -162,7 +163,8 @@ public final class FitNesseVertxMain {
       String resource = resourceFrom(pathAfter(ctx.request().path(), "/wiki/"));
       String address = resolvePageAddress(ctx);
       io.vertx.core.json.JsonObject payload = busService.buildPayload(ctx, resource);
-      bus.request(address, payload, deliveryOptions(address), ar -> {
+      bus.request(address, payload, deliveryOptions(address))
+        .onComplete(ar -> {
         if (ar.succeeded()) {
           io.vertx.core.json.JsonObject response = (io.vertx.core.json.JsonObject) ar.result().body();
           maybeWriteTestArtifacts(vertx, context, address, payload, response);
@@ -174,7 +176,8 @@ public final class FitNesseVertxMain {
     });
     router.get("/wiki/*/edit").handler(ctx -> {
       String resource = resourceFrom(stripSuffix(pathAfter(ctx.request().path(), "/wiki/"), "/edit"));
-      bus.request("fitnesse.page.edit", busService.buildPayload(ctx, resource), deliveryOptions("fitnesse.page.edit"), ar -> {
+      bus.request("fitnesse.page.edit", busService.buildPayload(ctx, resource), deliveryOptions("fitnesse.page.edit"))
+        .onComplete(ar -> {
         if (ar.succeeded()) {
           busService.writeResponse(ctx, (io.vertx.core.json.JsonObject) ar.result().body());
         } else {
@@ -184,7 +187,8 @@ public final class FitNesseVertxMain {
     });
     router.post("/wiki/*").handler(ctx -> {
       String resource = resourceFrom(pathAfter(ctx.request().path(), "/wiki/"));
-      bus.request("fitnesse.page.save", busService.buildPayload(ctx, resource), deliveryOptions("fitnesse.page.save"), ar -> {
+      bus.request("fitnesse.page.save", busService.buildPayload(ctx, resource), deliveryOptions("fitnesse.page.save"))
+        .onComplete(ar -> {
         if (ar.succeeded()) {
           busService.writeResponse(ctx, (io.vertx.core.json.JsonObject) ar.result().body());
         } else {
@@ -194,7 +198,8 @@ public final class FitNesseVertxMain {
     });
     router.post("/wiki/*/attachments").handler(ctx -> {
       String resource = resourceWithFiles(resourceFrom(stripSuffix(pathAfter(ctx.request().path(), "/wiki/"), "/attachments")));
-      bus.request("fitnesse.page.attachments", busService.buildPayload(ctx, resource), deliveryOptions("fitnesse.page.attachments"), ar -> {
+      bus.request("fitnesse.page.attachments", busService.buildPayload(ctx, resource), deliveryOptions("fitnesse.page.attachments"))
+        .onComplete(ar -> {
         if (ar.succeeded()) {
           busService.writeResponse(ctx, (io.vertx.core.json.JsonObject) ar.result().body());
         } else {
@@ -213,7 +218,8 @@ public final class FitNesseVertxMain {
         params.put("includehtml", new io.vertx.core.json.JsonArray().add("true"));
       }
       payload.put(ResponderBusService.HEADER_PARAMS, params);
-      bus.request("fitnesse.test.suite", payload, deliveryOptions("fitnesse.test.suite"), ar -> {
+      bus.request("fitnesse.test.suite", payload, deliveryOptions("fitnesse.test.suite"))
+        .onComplete(ar -> {
         if (ar.succeeded()) {
           io.vertx.core.json.JsonObject response = (io.vertx.core.json.JsonObject) ar.result().body();
           maybeWriteTestArtifacts(vertx, context, "fitnesse.test.suite", payload, response);
@@ -225,7 +231,8 @@ public final class FitNesseVertxMain {
     });
     router.get("/results/*").handler(ctx -> {
       String resource = resourceFrom(pathAfter(ctx.request().path(), "/results/"));
-      bus.request("fitnesse.results", busService.buildPayload(ctx, resource), deliveryOptions("fitnesse.results"), ar -> {
+      bus.request("fitnesse.results", busService.buildPayload(ctx, resource), deliveryOptions("fitnesse.results"))
+        .onComplete(ar -> {
         if (ar.succeeded()) {
           busService.writeResponse(ctx, (io.vertx.core.json.JsonObject) ar.result().body());
         } else {
@@ -267,7 +274,8 @@ public final class FitNesseVertxMain {
         .put("limit", finalLimit)
         .put("offset", finalOffset)
         .put("tags", finalTags == null ? "" : finalTags)
-        .put("pageType", finalPageType == null ? "" : finalPageType), deliveryOptions(SearchBusService.ADDRESS_SEARCH), ar -> {
+        .put("pageType", finalPageType == null ? "" : finalPageType), deliveryOptions(SearchBusService.ADDRESS_SEARCH))
+        .onComplete(ar -> {
           if (ar.succeeded()) {
             io.vertx.core.json.JsonObject body = (io.vertx.core.json.JsonObject) ar.result().body();
             List<SearchResult> results = SearchBusService.toResults(body.getJsonArray("results"));
@@ -284,7 +292,8 @@ public final class FitNesseVertxMain {
       int limit = parseInt(ctx.request().getParam("limit"), 50);
       bus.request(GitBusService.ADDRESS_HISTORY, new io.vertx.core.json.JsonObject()
         .put("path", resource)
-        .put("limit", limit), deliveryOptions(GitBusService.ADDRESS_HISTORY), ar -> {
+        .put("limit", limit), deliveryOptions(GitBusService.ADDRESS_HISTORY))
+        .onComplete(ar -> {
           if (ar.succeeded()) {
             io.vertx.core.json.JsonObject body = (io.vertx.core.json.JsonObject) ar.result().body();
             String html = renderHistoryHtml(resource, body.getJsonArray("entries"));
@@ -300,7 +309,8 @@ public final class FitNesseVertxMain {
       String commitId = ctx.request().getParam("commitId");
       bus.request(GitBusService.ADDRESS_DIFF, new io.vertx.core.json.JsonObject()
         .put("path", resource)
-        .put("commitId", commitId), deliveryOptions(GitBusService.ADDRESS_DIFF), ar -> {
+        .put("commitId", commitId), deliveryOptions(GitBusService.ADDRESS_DIFF))
+        .onComplete(ar -> {
           if (ar.succeeded()) {
             io.vertx.core.json.JsonObject body = (io.vertx.core.json.JsonObject) ar.result().body();
             String html = renderDiffHtml(resource, commitId, body.getString("diff", ""));
@@ -316,7 +326,8 @@ public final class FitNesseVertxMain {
       String commitId = ctx.request().getParam("commitId");
       bus.request(GitBusService.ADDRESS_REVERT, new io.vertx.core.json.JsonObject()
         .put("path", resource)
-        .put("commitId", commitId), deliveryOptions(GitBusService.ADDRESS_REVERT), ar -> {
+        .put("commitId", commitId), deliveryOptions(GitBusService.ADDRESS_REVERT))
+        .onComplete(ar -> {
           if (ar.succeeded()) {
             ctx.response().setStatusCode(302).putHeader("Location", "/history/" + resource).end();
           } else {
@@ -339,7 +350,8 @@ public final class FitNesseVertxMain {
         .put("tags", tags == null ? "" : tags)
         .put("pageType", pageType == null ? "" : pageType)
         .put("offset", offset)
-        .put("limit", limit), deliveryOptions(SearchBusService.ADDRESS_SEARCH), ar -> {
+        .put("limit", limit), deliveryOptions(SearchBusService.ADDRESS_SEARCH))
+        .onComplete(ar -> {
           if (ar.succeeded()) {
             io.vertx.core.json.JsonObject body = (io.vertx.core.json.JsonObject) ar.result().body();
             ctx.response().putHeader("Content-Type", "application/json");
@@ -355,7 +367,8 @@ public final class FitNesseVertxMain {
       if (payload == null) {
         payload = new io.vertx.core.json.JsonObject();
       }
-      bus.request(AiBusService.ADDRESS_ASSIST, payload, deliveryOptions(AiBusService.ADDRESS_ASSIST), ar -> {
+      bus.request(AiBusService.ADDRESS_ASSIST, payload, deliveryOptions(AiBusService.ADDRESS_ASSIST))
+        .onComplete(ar -> {
         if (ar.succeeded()) {
           ctx.response().putHeader("Content-Type", "application/json");
           ctx.response().end(((io.vertx.core.json.JsonObject) ar.result().body()).encode());
@@ -370,7 +383,8 @@ public final class FitNesseVertxMain {
       if (payload == null) {
         payload = new io.vertx.core.json.JsonObject();
       }
-      bus.request(AiEvalBusService.ADDRESS_EVAL, payload, deliveryOptions(AiEvalBusService.ADDRESS_EVAL), ar -> {
+      bus.request(AiEvalBusService.ADDRESS_EVAL, payload, deliveryOptions(AiEvalBusService.ADDRESS_EVAL))
+        .onComplete(ar -> {
         if (ar.succeeded()) {
           ctx.response().putHeader("Content-Type", "application/json");
           ctx.response().end(((io.vertx.core.json.JsonObject) ar.result().body()).encode());
@@ -387,7 +401,8 @@ public final class FitNesseVertxMain {
 
     router.get("/api/ai/workflows").handler(ctx -> {
       bus.request(AiWorkflowBusService.ADDRESS_LIST, new io.vertx.core.json.JsonObject(),
-        deliveryOptions(AiWorkflowBusService.ADDRESS_LIST), ar -> {
+        deliveryOptions(AiWorkflowBusService.ADDRESS_LIST))
+        .onComplete(ar -> {
           if (ar.succeeded()) {
             ctx.response().putHeader("Content-Type", "application/json");
             ctx.response().end(((io.vertx.core.json.JsonObject) ar.result().body()).encode());
@@ -399,7 +414,8 @@ public final class FitNesseVertxMain {
     router.get("/api/ai/workflows/:id").handler(ctx -> {
       String id = ctx.pathParam("id");
       bus.request(AiWorkflowBusService.ADDRESS_GET, new io.vertx.core.json.JsonObject().put("id", id),
-        deliveryOptions(AiWorkflowBusService.ADDRESS_GET), ar -> {
+        deliveryOptions(AiWorkflowBusService.ADDRESS_GET))
+        .onComplete(ar -> {
           if (ar.succeeded()) {
             ctx.response().putHeader("Content-Type", "application/json");
             ctx.response().end(((io.vertx.core.json.JsonObject) ar.result().body()).encode());
@@ -414,7 +430,8 @@ public final class FitNesseVertxMain {
         payload = new io.vertx.core.json.JsonObject();
       }
       bus.request(AiWorkflowBusService.ADDRESS_SAVE, payload,
-        deliveryOptions(AiWorkflowBusService.ADDRESS_SAVE), ar -> {
+        deliveryOptions(AiWorkflowBusService.ADDRESS_SAVE))
+        .onComplete(ar -> {
           if (ar.succeeded()) {
             ctx.response().putHeader("Content-Type", "application/json");
             ctx.response().end(((io.vertx.core.json.JsonObject) ar.result().body()).encode());
@@ -429,7 +446,8 @@ public final class FitNesseVertxMain {
         payload = new io.vertx.core.json.JsonObject();
       }
       bus.request(AiWorkflowBusService.ADDRESS_RUN, payload,
-        deliveryOptions(AiWorkflowBusService.ADDRESS_RUN), ar -> {
+        deliveryOptions(AiWorkflowBusService.ADDRESS_RUN))
+        .onComplete(ar -> {
           if (ar.succeeded()) {
             ctx.response().putHeader("Content-Type", "application/json");
             ctx.response().end(((io.vertx.core.json.JsonObject) ar.result().body()).encode());
@@ -444,7 +462,8 @@ public final class FitNesseVertxMain {
       int limit = parseInt(ctx.request().getParam("limit"), 10);
       bus.request(AiWorkflowBusService.ADDRESS_RUNS, new io.vertx.core.json.JsonObject()
         .put("id", id)
-        .put("limit", limit), deliveryOptions(AiWorkflowBusService.ADDRESS_RUNS), ar -> {
+        .put("limit", limit), deliveryOptions(AiWorkflowBusService.ADDRESS_RUNS))
+        .onComplete(ar -> {
           if (ar.succeeded()) {
             ctx.response().putHeader("Content-Type", "application/json");
             ctx.response().end(((io.vertx.core.json.JsonObject) ar.result().body()).encode());
@@ -470,7 +489,8 @@ public final class FitNesseVertxMain {
       int limit = parseInt(ctx.request().getParam("limit"), 50);
       bus.request(GitBusService.ADDRESS_HISTORY, new io.vertx.core.json.JsonObject()
         .put("path", resource)
-        .put("limit", limit), deliveryOptions(GitBusService.ADDRESS_HISTORY), ar -> {
+        .put("limit", limit), deliveryOptions(GitBusService.ADDRESS_HISTORY))
+        .onComplete(ar -> {
           if (ar.succeeded()) {
             ctx.response().putHeader("Content-Type", "application/json");
             ctx.response().end(((io.vertx.core.json.JsonObject) ar.result().body()).encode());
@@ -484,7 +504,8 @@ public final class FitNesseVertxMain {
       String commitId = ctx.request().getParam("commitId");
       bus.request(GitBusService.ADDRESS_DIFF, new io.vertx.core.json.JsonObject()
         .put("path", resource)
-        .put("commitId", commitId), deliveryOptions(GitBusService.ADDRESS_DIFF), ar -> {
+        .put("commitId", commitId), deliveryOptions(GitBusService.ADDRESS_DIFF))
+        .onComplete(ar -> {
           if (ar.succeeded()) {
             io.vertx.core.json.JsonObject body = (io.vertx.core.json.JsonObject) ar.result().body();
             ctx.response().putHeader("Content-Type", "text/plain; charset=UTF-8");
@@ -499,7 +520,8 @@ public final class FitNesseVertxMain {
       String commitId = ctx.request().getParam("commitId");
       bus.request(GitBusService.ADDRESS_REVERT, new io.vertx.core.json.JsonObject()
         .put("path", resource)
-        .put("commitId", commitId), deliveryOptions(GitBusService.ADDRESS_REVERT), ar -> {
+        .put("commitId", commitId), deliveryOptions(GitBusService.ADDRESS_REVERT))
+        .onComplete(ar -> {
           if (ar.succeeded()) {
             ctx.response().setStatusCode(204).end();
           } else {
@@ -528,7 +550,7 @@ public final class FitNesseVertxMain {
       String format = ctx.pathParam("format");
       String encoded = ctx.pathParam("encoded");
       String target = trimTrailingSlash(plantUmlProxyTarget) + "/" + format + "/" + encoded;
-      webClient.getAbs(target).send(ar -> {
+      webClient.getAbs(target).send().onComplete(ar -> {
         if (ar.succeeded()) {
           io.vertx.ext.web.client.HttpResponse<io.vertx.core.buffer.Buffer> response = ar.result();
           String contentType = response.getHeader("Content-Type");
@@ -566,8 +588,7 @@ public final class FitNesseVertxMain {
     SockJSBridgeOptions ebOptions = new SockJSBridgeOptions()
       .addOutboundPermitted(new PermittedOptions().setAddress("fitnesse.run.monitor"));
     SockJSHandler sockJsHandler = SockJSHandler.create(vertx);
-    sockJsHandler.bridge(ebOptions);
-    router.route("/eventbus/*").handler(sockJsHandler);
+    router.route("/eventbus/*").subRouter(sockJsHandler.bridge(ebOptions));
 
     router.get("/metrics").handler(ctx -> {
       PrometheusMeterRegistry registry = (PrometheusMeterRegistry) BackendRegistries.getDefaultNow();
@@ -663,7 +684,7 @@ public final class FitNesseVertxMain {
       ctx.response().putHeader("Content-Type", "text/html; charset=UTF-8").end(html);
     });
 
-    DeploymentOptions workerOpts = new DeploymentOptions().setWorker(true);
+    DeploymentOptions workerOpts = new DeploymentOptions().setThreadingModel(io.vertx.core.ThreadingModel.WORKER);
     vertx.deployVerticle(() -> new TestRunnerVerticle(busService, runMonitor, config), workerOpts)
       .onSuccess(id -> LOG.info("TestRunnerVerticle deployed: " + id))
       .onFailure(err -> LOG.log(Level.SEVERE, "Failed to deploy TestRunnerVerticle", err));
@@ -672,7 +693,7 @@ public final class FitNesseVertxMain {
         .setIdleTimeout(config.idleTimeoutSeconds())
         .setIdleTimeoutUnit(TimeUnit.SECONDS))
       .requestHandler(router)
-      .listen(config.port(), result -> {
+      .listen(config.port()).onComplete(result -> {
         if (result.succeeded()) {
           LOG.info("FitNesse Vert.x server listening on port " + config.port());
         } else {
@@ -801,18 +822,10 @@ public final class FitNesseVertxMain {
     if (resource.contains("..")) {
       return;
     }
-    vertx.executeBlocking(promise -> {
-      try {
-        writeTestArtifacts(context, resource, payload, response);
-        promise.complete();
-      } catch (Exception e) {
-        promise.fail(e);
-      }
-    }, false, ar -> {
-      if (ar.failed()) {
-        LOG.log(Level.WARNING, "Failed to write test artifacts for " + resource, ar.cause());
-      }
-    });
+    vertx.executeBlocking(() -> {
+      writeTestArtifacts(context, resource, payload, response);
+      return null;
+    }, false).onFailure(err -> LOG.log(Level.WARNING, "Failed to write test artifacts for " + resource, err));
   }
 
   private static void writeTestArtifacts(FitNesseContext context,
@@ -976,13 +989,14 @@ public final class FitNesseVertxMain {
 
   private static void handleFileRequest(RoutingContext ctx, EventBus bus, ResponderBusService busService) {
     String resource = resourceFrom(pathAfter(ctx.request().path(), "/"));
-    bus.request("fitnesse.files", busService.buildPayload(ctx, resource), deliveryOptions("fitnesse.files"), ar -> {
-      if (ar.succeeded()) {
-        busService.writeResponse(ctx, (io.vertx.core.json.JsonObject) ar.result().body());
-      } else {
-        ctx.response().setStatusCode(500).end("EventBus error: " + ar.cause().getMessage());
-      }
-    });
+    bus.request("fitnesse.files", busService.buildPayload(ctx, resource), deliveryOptions("fitnesse.files"))
+      .onComplete(ar -> {
+        if (ar.succeeded()) {
+          busService.writeResponse(ctx, (io.vertx.core.json.JsonObject) ar.result().body());
+        } else {
+          ctx.response().setStatusCode(500).end("EventBus error: " + ar.cause().getMessage());
+        }
+      });
   }
 
   private static String renderSearchResults(String query, SearchService.Mode mode, String tags, String pageType,

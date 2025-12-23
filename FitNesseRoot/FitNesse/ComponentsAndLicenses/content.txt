@@ -6,7 +6,7 @@ FitNesse bundles additional libraries and UI assets. The lists below highlight k
 
 !2 Runtime libraries (selected)
 |Name|Version|Web-site|License|
-|Vert.x stack (core/web/web-client/auth-oauth2/config/grpc/micrometer)|4.5.13|https://vertx.io/|Apache License 2.0|
+|Vert.x stack (core/web/web-client/auth-oauth2/config/grpc/micrometer)|5.0.6|https://vertx.io/|Apache License 2.0|
 |PlantUML|1.2024.8|https://plantuml.com/|Apache License 2.0|
 |Apache Velocity|2.4.1|https://velocity.apache.org/|Apache License 2.0|
 |Apache Commons Lang|3.19.0|https://commons.apache.org/proper/commons-lang/|Apache License 2.0|
@@ -15,7 +15,7 @@ FitNesse bundles additional libraries and UI assets. The lists below highlight k
 |Protobuf Java|3.25.5|https://protobuf.dev/|BSD 3-Clause License|
 |Micrometer Prometheus Registry|1.12.6|https://micrometer.io/|Apache License 2.0|
 |Java Diff Utils|1.3.0|https://github.com/java-diff-utils/java-diff-utils|Apache License 2.0|
-|Groovy XML|4.0.22|https://groovy-lang.org/|Apache License 2.0|
+|Groovy XML|5.0.3|https://groovy-lang.org/|Apache License 2.0|
 |Nashorn Core|15.7|https://openjdk.org/projects/nashorn/|GPL-2.0 with Classpath Exception|
 
 !2 UI assets

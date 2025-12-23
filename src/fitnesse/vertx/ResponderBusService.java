@@ -19,6 +19,7 @@ import io.vertx.ext.web.RoutingContext;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 /**
  * Adapts legacy FitNesse responders into async Vert.x EventBus handlers.
@@ -67,12 +68,12 @@ final class ResponderBusService {
         }
         monitor.incrementQueued(resource);
       }
-      io.vertx.core.Handler<io.vertx.core.Promise<JsonObject>> work = promise -> {
+      Callable<JsonObject> work = () -> {
         long start = monitor == null ? 0 : monitor.startRun(resource);
         try {
-          promise.complete(handle(payload, responder));
+          return handle(payload, responder);
         } catch (Exception e) {
-          promise.fail(e);
+          throw e;
         } finally {
           if (monitor != null) {
             monitor.finishRun(start, resource);
@@ -81,7 +82,7 @@ final class ResponderBusService {
       };
 
       if (executor != null) {
-        executor.executeBlocking(work, false, ar -> {
+        executor.executeBlocking(work, false).onComplete(ar -> {
           if (ar.succeeded()) {
             message.reply(ar.result());
           } else {
@@ -89,7 +90,7 @@ final class ResponderBusService {
           }
         });
       } else {
-        vertx.executeBlocking(work, false, ar -> {
+        vertx.executeBlocking(work, false).onComplete(ar -> {
           if (ar.succeeded()) {
             message.reply(ar.result());
           } else {
@@ -109,7 +110,8 @@ final class ResponderBusService {
     payload.put(HEADER_CONTEXT_ROOT, context.contextRoot);
     payload.put(HEADER_HEADERS, multimapToJson(routingContext.request().headers()));
     payload.put(HEADER_PARAMS, multimapToJson(routingContext.request().params()));
-    payload.put(HEADER_BODY, routingContext.getBodyAsString());
+    String body = routingContext.body() == null ? null : routingContext.body().asString();
+    payload.put(HEADER_BODY, body);
 
     JsonArray uploads = new JsonArray();
     for (FileUpload upload : routingContext.fileUploads()) {

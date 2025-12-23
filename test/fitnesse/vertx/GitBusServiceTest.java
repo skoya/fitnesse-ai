@@ -32,20 +32,23 @@ public class GitBusServiceTest {
     service.register(vertx.eventBus());
 
     vertx.eventBus().request(GitBusService.ADDRESS_HISTORY,
-      new JsonObject().put("path", "FrontPage").put("limit", 10), testContext.succeeding(historyAr -> {
-        JsonArray entries = ((JsonObject) historyAr.body()).getJsonArray("entries");
+      new JsonObject().put("path", "FrontPage").put("limit", 10))
+      .onComplete(testContext.succeeding(historyMessage -> {
+        JsonArray entries = ((JsonObject) historyMessage.body()).getJsonArray("entries");
         testContext.verify(() ->
           org.junit.jupiter.api.Assertions.assertTrue(entries.size() >= 2));
         String latest = entries.getJsonObject(0).getString("commitId");
         String earliest = entries.getJsonObject(entries.size() - 1).getString("commitId");
 
         vertx.eventBus().request(GitBusService.ADDRESS_DIFF,
-          new JsonObject().put("path", "FrontPage").put("commitId", latest), testContext.succeeding(diffAr -> {
-            JsonObject diffBody = (JsonObject) diffAr.body();
+          new JsonObject().put("path", "FrontPage").put("commitId", latest))
+          .onComplete(testContext.succeeding(diffMessage -> {
+            JsonObject diffBody = (JsonObject) diffMessage.body();
             testContext.verify(() ->
               org.junit.jupiter.api.Assertions.assertNotNull(diffBody.getString("diff")));
             vertx.eventBus().request(GitBusService.ADDRESS_REVERT,
-              new JsonObject().put("path", "FrontPage").put("commitId", earliest), testContext.succeeding(revertAr -> {
+              new JsonObject().put("path", "FrontPage").put("commitId", earliest))
+              .onComplete(testContext.succeeding(revertMessage -> {
                 String content = store.readPage(ref).content();
                 testContext.verify(() ->
                   org.junit.jupiter.api.Assertions.assertEquals("alpha", content));

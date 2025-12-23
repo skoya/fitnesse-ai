@@ -6,10 +6,12 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.User;
+import io.vertx.ext.auth.authentication.TokenCredentials;
 import io.vertx.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.ext.auth.oauth2.OAuth2Options;
 import io.vertx.ext.auth.oauth2.providers.OpenIDConnectAuth;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.impl.UserContextInternal;
 
 import java.util.logging.Logger;
 
@@ -51,7 +53,7 @@ public final class VertxOidcAuthHandler implements Handler<RoutingContext> {
       return;
     }
     String token = header.substring("Bearer ".length()).trim();
-    auth.authenticate(new JsonObject().put("access_token", token))
+    auth.authenticate(new TokenCredentials(token))
       .onFailure(err -> {
         LOG.fine("OIDC auth failed: " + err.getMessage());
         ctx.response().setStatusCode(401).end("Unauthorized");
@@ -61,7 +63,10 @@ public final class VertxOidcAuthHandler implements Handler<RoutingContext> {
           ctx.response().setStatusCode(403).end("Forbidden");
           return;
         }
-        ctx.setUser(user);
+        // Vert.x 5 stores users on UserContext; setting it requires internal access.
+        if (ctx.userContext() instanceof UserContextInternal) {
+          ((UserContextInternal) ctx.userContext()).setUser(user);
+        }
         String username = preferredUsername(user);
         String email = email(user);
         GitIdentityHolder.set(new GitIdentity(username, email));

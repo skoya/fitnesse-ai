@@ -53,10 +53,10 @@ final class SearchBusService {
       SearchService.PageTypeFilter pageTypeFilter = parsePageTypeFilter(pageType);
       List<String> tagFilters = parseTags(tags);
 
-      vertx.executeBlocking(promise -> {
+      vertx.executeBlocking(() -> {
         List<SearchResult> results = searchService.search(query, mode, limit, offset, tagFilters, pageTypeFilter);
-        promise.complete(buildPayload(query, mode, tags, pageType, limit, offset, results));
-      }, false, ar -> {
+        return buildPayload(query, mode, tags, pageType, limit, offset, results);
+      }, false).onComplete(ar -> {
         if (ar.succeeded()) {
           JsonObject response = (JsonObject) ar.result();
           cache.put(cacheKey, cacheEntry(response));

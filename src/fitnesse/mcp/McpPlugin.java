@@ -111,7 +111,7 @@ public class McpPlugin extends PluginFeatureFactoryBase {
           if (!access.authorize(ctx)) {
             return;
           }
-          ctx.request().toWebSocket(ar -> {
+          ctx.request().toWebSocket().onComplete(ar -> {
             if (ar.failed()) {
               return;
             }

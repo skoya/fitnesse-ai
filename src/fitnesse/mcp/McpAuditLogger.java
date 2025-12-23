@@ -77,18 +77,12 @@ public final class McpAuditLogger {
 
   private void writeEvent(JsonObject event) {
     String directory = logPath.getParent().toString();
-    vertx.fileSystem().mkdirs(directory, mkdirRes -> {
-      if (mkdirRes.failed()) {
-        return;
-      }
-      OpenOptions options = new OpenOptions().setWrite(true).setCreate(true).setAppend(true);
-      vertx.fileSystem().open(logPath.toString(), options, openRes -> {
-        if (openRes.failed()) {
-          return;
-        }
+    OpenOptions options = new OpenOptions().setWrite(true).setCreate(true).setAppend(true);
+    vertx.fileSystem().mkdirs(directory)
+      .compose(ignored -> vertx.fileSystem().open(logPath.toString(), options))
+      .onSuccess(file -> {
         Buffer buffer = Buffer.buffer(event.encode() + System.lineSeparator());
-        openRes.result().write(buffer, writeRes -> openRes.result().close());
+        file.write(buffer, file.getWritePos()).onComplete(ar -> file.close());
       });
-    });
   }
 }

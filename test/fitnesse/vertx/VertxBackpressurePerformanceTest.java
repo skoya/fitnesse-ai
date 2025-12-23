@@ -49,7 +49,7 @@ class VertxBackpressurePerformanceTest {
     EventBus bus = vertx.eventBus();
 
     for (int i = 0; i < requestCount; i++) {
-      bus.request(address, payload, ar -> {
+      bus.request(address, payload).onComplete(ar -> {
         ctx.verify(() -> {
           if (ar.succeeded()) {
             successes.incrementAndGet();

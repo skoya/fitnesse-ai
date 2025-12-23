@@ -20,11 +20,12 @@ public class AiEvalBusServiceTest {
     JsonObject payload = new JsonObject()
       .put("prompt", "Hello")
       .put("expectedContains", "Hello");
-    vertx.eventBus().request(AiEvalBusService.ADDRESS_EVAL, payload, testContext.succeeding(ar -> {
-      JsonObject body = (JsonObject) ar.body();
+    vertx.eventBus().request(AiEvalBusService.ADDRESS_EVAL, payload)
+      .onComplete(testContext.succeeding(message -> {
+        JsonObject body = (JsonObject) message.body();
       testContext.verify(() ->
         org.junit.jupiter.api.Assertions.assertTrue(body.getBoolean("passed")));
       testContext.completeNow();
-    }));
+      }));
   }
 }

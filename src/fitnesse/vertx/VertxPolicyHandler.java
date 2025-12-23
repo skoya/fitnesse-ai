@@ -33,7 +33,7 @@ final class VertxPolicyHandler implements Handler<RoutingContext> {
   }
 
   private AccessPolicy.Surface surface(RoutingContext ctx) {
-    String path = ctx.normalisedPath();
+    String path = ctx.normalizedPath();
     if (path.startsWith("/api/")) {
       return AccessPolicy.Surface.API;
     }
@@ -44,7 +44,7 @@ final class VertxPolicyHandler implements Handler<RoutingContext> {
   }
 
   private String resolvePolicyPath(RoutingContext ctx) {
-    String path = ctx.normalisedPath();
+    String path = ctx.normalizedPath();
     if (path.startsWith("/wiki/")) {
       return stripLeadingSlash(path.substring("/wiki/".length()));
     }
