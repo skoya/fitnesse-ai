@@ -178,7 +178,7 @@ public class TypeAdapter {
   static class ClassByteAdapter extends TypeAdapter {
     @Override
     public Object parse(String s) {
-      return ("null".equals(s)) ? null : new Byte(Byte.parseByte(s));
+      return ("null".equals(s)) ? null : Byte.valueOf(Byte.parseByte(s));
     }
   }
 
@@ -192,7 +192,7 @@ public class TypeAdapter {
   static class ClassShortAdapter extends TypeAdapter {
     @Override
     public Object parse(String s) {
-      return ("null".equals(s)) ? null : new Short(Short.parseShort(s));
+      return ("null".equals(s)) ? null : Short.valueOf(Short.parseShort(s));
     }
   }
 
@@ -206,7 +206,7 @@ public class TypeAdapter {
   static class ClassIntegerAdapter extends TypeAdapter {
     @Override
     public Object parse(String s) {
-      return ("null".equals(s)) ? null : new Integer(Integer.parseInt(s));
+      return ("null".equals(s)) ? null : Integer.valueOf(Integer.parseInt(s));
     }
   }
 
@@ -219,7 +219,7 @@ public class TypeAdapter {
   static class ClassLongAdapter extends TypeAdapter {
     @Override
     public Object parse(String s) {
-      return ("null".equals(s)) ? null : new Long(Long.parseLong(s));
+      return ("null".equals(s)) ? null : Long.valueOf(Long.parseLong(s));
     }
   }
 
@@ -231,14 +231,14 @@ public class TypeAdapter {
 
     @Override
     public Object parse(String s) {
-      return ("null".equals(s)) ? null : new Float(Float.parseFloat(s));
+      return ("null".equals(s)) ? null : Float.valueOf(Float.parseFloat(s));
     }
   }
 
   static class ClassFloatAdapter extends TypeAdapter {
     @Override
     public Object parse(String s) {
-      return ("null".equals(s)) ? null : new Float(Float.parseFloat(s));
+      return ("null".equals(s)) ? null : Float.valueOf(Float.parseFloat(s));
     }
   }
 
@@ -250,14 +250,14 @@ public class TypeAdapter {
 
     @Override
     public Object parse(String s) {
-      return new Double(Double.parseDouble(s));
+      return Double.valueOf(Double.parseDouble(s));
     }
   }
 
   static class ClassDoubleAdapter extends TypeAdapter {
     @Override
     public Object parse(String s) {
-      return ("null".equals(s)) ? null : new Double(Double.parseDouble(s));
+      return ("null".equals(s)) ? null : Double.valueOf(Double.parseDouble(s));
     }
   }
 
@@ -271,7 +271,7 @@ public class TypeAdapter {
   static class ClassCharacterAdapter extends TypeAdapter {
     @Override
     public Object parse(String s) {
-      return ("null".equals(s)) ? null : new Character(s.charAt(0));
+      return ("null".equals(s)) ? null : Character.valueOf(s.charAt(0));
     }
   }
 

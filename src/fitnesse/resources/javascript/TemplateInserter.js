@@ -1,6 +1,6 @@
 function TemplateInserter()
 {
-  this.insertInto = function(templateValue, codeMirrorDoc) {
+  this.insertInto = function(templateValue, codeMirrorDoc, onInserted) {
     
     if(templateValue !== "")
     {
@@ -10,6 +10,9 @@ function TemplateInserter()
         url: pageDataUrl,
         success: function(result) {
           codeMirrorDoc.replaceSelection(result);
+          if (typeof onInserted === "function") {
+            onInserted();
+          }
         },
         error: function() {
           alert("Error Accessing Template");

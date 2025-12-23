@@ -31,7 +31,9 @@ public class SystemExitSecurityManagerTest {
     }
   }
 
+  @SuppressWarnings("removal")
   private void activateSystemExitSecurityManager() {
+    org.junit.Assume.assumeFalse(SystemExitSecurityManager.isRetired());
     System.setSecurityManager(null);
     System.setProperty(SystemExitSecurityManager.PREVENT_SYSTEM_EXIT, "true");
     SystemExitSecurityManager.activateIfWanted();

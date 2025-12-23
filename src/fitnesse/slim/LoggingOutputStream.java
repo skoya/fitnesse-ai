@@ -52,9 +52,9 @@ class LoggingOutputStream extends ByteArrayOutputStream {
       // avoid empty records
       return;
     }
-    if (EXTRA_NEWLINE_EXPECTED) {
+    if (EXTRA_NEWLINE_EXPECTED && record.endsWith(lineSeparator)) {
       // extra newlines after each message, strip those
-      record = record.substring(0, record.length() - 1);
+      record = record.substring(0, record.length() - lineSeparator.length());
     }
     // Prefix each new line with: newline + level + DOT + ":"
     record = record.replace("\n", "\n" + level

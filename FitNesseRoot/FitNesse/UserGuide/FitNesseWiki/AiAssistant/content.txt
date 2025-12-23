@@ -1,0 +1,29 @@
+!1 AI assistant and agent workflows
+FitNesse ships with an AI side panel for drafting specs, writing tests, summarizing pages, and running agent workflows (LangGraph-style graphs).
+
+!2 Opening the assistant
+ * Click the AI link in the top nav or open !style_code(/ai) for the panel experience.
+ * The assistant supports freeform chat, Q&A on the current page, and page summaries.
+
+!2 Providers and configuration
+|!meta setting|!meta default|!meta description|
+|FITNESSE_AI_PROVIDER|echo|Select !style_code(echo) (no external calls) or !style_code(openai)|
+|OPENAI_API_KEY|-(unset)-|API key used when provider=openai|
+|OPENAI_MODEL|gpt-4.1|Model name passed to OpenAI|
+
+!2 Workflow builder (agent graphs)
+ * Open !style_code(/agent) to launch the graph editor.
+ * Drag nodes, connect edges, and set node !style_code(role), !style_code(prompt), and optional !style_code(reflection) prompts.
+ * Node layout is draggable (x/y saved) for readability; edges define execution order.
+ * Save/load workflows via the API: !style_code(/api/ai/workflows) and !style_code(/api/ai/workflows/:id).
+ * Run a workflow with !style_code(/api/ai/workflows/run); runs are stored for review at !style_code(/api/ai/workflows/:id/runs).
+ * Runs include raw output and reflection output; you can assert expected text/contains/regex in the UI.
+
+!2 History and storage
+ * Workflow definitions and run history are stored under !style_code(.fitnesse/ai/workflows) and !style_code(.fitnesse/ai/workflows-runs.jsonl) inside your wiki root.
+ * Conversations and runs are append-only to keep an auditable trail.
+
+!2 Tips
+ * Use roles (Reviewer, Tester, Author) to guide prompt tone and output.
+ * Add reflection text to request a second-pass critique for higher-quality responses.
+ * Pair the assistant with Search filters to ground prompts on the right page set.

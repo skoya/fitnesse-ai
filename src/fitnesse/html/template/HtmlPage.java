@@ -31,6 +31,7 @@ public class HtmlPage {
     setTitle(TITLE);
     velocityContext.put("theme", theme);
     velocityContext.put("contextRoot", contextRoot);
+    velocityContext.put("wikiRoot", contextRoot);
   }
 
   public void setHeaderTemplate(String headerTemplate) {

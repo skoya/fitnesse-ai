@@ -12,7 +12,7 @@ public class ScientificDoubleTest {
 
   @Test
   public void testScientificDouble() {
-    Double pi = new Double(3.141592653589793);
+    Double pi = Double.valueOf(3.141592653589793);
     assertEquals(ScientificDouble.valueOf("3.14"), pi);
     assertEquals(ScientificDouble.valueOf("3.142"), pi);
     assertEquals(ScientificDouble.valueOf("3.1416"), pi);
@@ -22,11 +22,11 @@ public class ScientificDoubleTest {
     assertFalse(ScientificDouble.valueOf("3.144").equals(pi));
     assertFalse(ScientificDouble.valueOf("3.1414").equals(pi));
     assertFalse(ScientificDouble.valueOf("3.141592863").equals(pi));
-    assertEquals(ScientificDouble.valueOf("6.02e23"), new Double(6.02e23));
-    assertEquals(ScientificDouble.valueOf("6.02E23"), new Double(6.024E23));
-    assertEquals(ScientificDouble.valueOf("6.02e23"), new Double(6.016e23));
-    assertFalse(ScientificDouble.valueOf("6.02e23").equals(new Double(6.026e23)));
-    assertFalse(ScientificDouble.valueOf("6.02e23").equals(new Double(6.014e23)));
+    assertEquals(ScientificDouble.valueOf("6.02e23"), Double.valueOf(6.02e23));
+    assertEquals(ScientificDouble.valueOf("6.02E23"), Double.valueOf(6.024E23));
+    assertEquals(ScientificDouble.valueOf("6.02e23"), Double.valueOf(6.016e23));
+    assertFalse(ScientificDouble.valueOf("6.02e23").equals(Double.valueOf(6.026e23)));
+    assertFalse(ScientificDouble.valueOf("6.02e23").equals(Double.valueOf(6.014e23)));
   }
 
 }

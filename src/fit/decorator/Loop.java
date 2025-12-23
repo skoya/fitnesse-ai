@@ -21,7 +21,7 @@ public class Loop extends FixtureDecorator {
       throw new InvalidInputException("Loop count must be specified");
     }
     counter = Integer.parseInt(arguments[0]);
-    summary.put(COUNT, new Long(counter));
+    summary.put(COUNT, Long.valueOf(counter));
   }
 
   @Override

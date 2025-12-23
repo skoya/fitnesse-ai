@@ -10,7 +10,7 @@ import fitnesse.testutil.FitNesseUtil;
 import fitnesse.wiki.*;
 
 import static org.junit.Assert.assertEquals;
-import org.json.JSONArray;
+import io.vertx.core.json.JsonArray;
 import org.junit.Before;
 import org.junit.Test;
 import static util.RegexTestCase.assertDoesntHaveRegexp;
@@ -107,8 +107,8 @@ public class NameWikiPageResponderTest {
     request.setResource("");
     request.addInput("format", "json");
     SimpleResponse response = (SimpleResponse) responder.makeResponse(context, request);
-    JSONArray actual = new JSONArray(response.getContent());
-    assertEquals(2, actual.length());
+    JsonArray actual = new JsonArray(response.getContent());
+    assertEquals(2, actual.size());
     Set<String> actualSet = new HashSet<>();
     actualSet.add(actual.getString(0));
     actualSet.add(actual.getString(1));

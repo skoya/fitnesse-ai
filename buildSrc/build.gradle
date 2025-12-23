@@ -6,9 +6,17 @@ repositories {
   mavenCentral()
 }
 
+def groovyVersion = '4.0.22'
+
 dependencies {
-  implementation localGroovy()
   implementation gradleApi()
+  implementation "org.apache.groovy:groovy:${groovyVersion}"
   testImplementation "junit:junit:4.13.2"
-  testImplementation "org.mockito:mockito-core:3.12.4"
+  testImplementation "org.mockito:mockito-core:5.15.2"
+}
+
+tasks.withType(GroovyCompile).configureEach {
+  groovyClasspath = configurations.detachedConfiguration(
+    dependencies.create("org.apache.groovy:groovy:${groovyVersion}")
+  )
 }

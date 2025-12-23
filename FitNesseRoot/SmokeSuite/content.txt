@@ -1,0 +1,5 @@
+!define TEST_SYSTEM {slim}
+
+This suite runs a minimal smoke test for CI pipelines.
+
+!contents -R

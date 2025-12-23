@@ -103,4 +103,13 @@ public class HtmlPageTest {
     assertSubString("<a href=\"/TstPg1.TstPg2.TstPg3.TstPg4\">TstPg4</a>", breadcrumbs);
   }
 
+  @Test
+  public void testBreadCrumbsUseWikiRootWhenProvided() throws Exception {
+    String trail = "TstPg1.TstPg2";
+    page.put("wikiRoot", "/wiki/");
+    page.setPageTitle(new PageTitle(PathParser.parse(trail)));
+    String breadcrumbs = page.html(null);
+    assertSubString("<a href=\"/wiki/TstPg1\">TstPg1</a>", breadcrumbs);
+    assertSubString("<a href=\"/wiki/TstPg1.TstPg2\">TstPg2</a>", breadcrumbs);
+  }
 }

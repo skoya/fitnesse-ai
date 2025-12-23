@@ -1,0 +1,21 @@
+PlantUML diagrams can be embedded directly in a page using a dedicated block.
+
+'''Markup Text'''
+{{{!plantuml
+@startuml
+Alice -> Bob: Hello
+Bob --> Alice: Hi
+@enduml
+!endplantuml}}}
+
+'''Displays as:'''
+!plantuml
+@startuml
+Alice -> Bob: Hello
+Bob --> Alice: Hi
+@enduml
+!endplantuml
+
+!note The default renderer uses the bundled PlantUML jar to generate inline SVG. Set !-fitnesse.plantuml.server-! or !-FITNESSE_PLANTUML_SERVER-! to override with a PlantUML rendering server.
+
+!note A default style is applied from the built-in file !-plantuml/fitnesse-style.puml-!. Set !-fitnesse.plantuml.style-! to ''none'' to disable it.

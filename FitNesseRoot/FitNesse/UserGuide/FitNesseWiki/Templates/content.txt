@@ -1,0 +1,22 @@
+Templates make it easy to reuse common page scaffolding. Create template pages under any !-TemplateLibrary-! page, then insert them while editing.
+
+!3 Creating templates
+Create a page named !-TemplateLibrary-! and add child pages under it. Each child is a template.
+
+Example:
+{{{.Project.TemplateLibrary.ApiTest}}}
+
+!3 Inserting templates while editing
+Open a page and click '''Edit'''. Use the Templates panel:
+* Select a template from the list.
+* Click '''Insert''' to paste it at the caret (or replace the selection).
+* Click '''Edit''' to update the template itself.
+
+!3 Example template page
+This page can live under a !-TemplateLibrary-!:
+{{{!define TEST_SYSTEM {slim}
+
+!|script|ExampleFixture|
+|start|${ENV}|
+|step|value|
+}}}

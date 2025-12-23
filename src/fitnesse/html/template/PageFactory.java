@@ -15,16 +15,20 @@ import java.util.Properties;
 public class PageFactory {
   private final String theme;
   private final String contextRoot;
+  private final String wikiRoot;
   private VelocityEngine velocityEngine = null;
 
   public PageFactory(FitNesseContext context) {
     this.theme = context.theme;
     this.velocityEngine = newVelocityEngine(context.getRootPagePath(), this.theme);
     this.contextRoot = context.contextRoot;
+    this.wikiRoot = resolveWikiRoot(context);
   }
 
   public HtmlPage newPage() {
-    return new HtmlPage(getVelocityEngine(), "skeleton.vm", theme, contextRoot);
+    HtmlPage page = new HtmlPage(getVelocityEngine(), "skeleton.vm", theme, contextRoot);
+    page.put("wikiRoot", wikiRoot);
+    return page;
   }
 
   public String render(VelocityContext context, String templateName) {
@@ -73,5 +77,19 @@ public class PageFactory {
     engine.loadDirective(TraverseDirective.class.getName());
     engine.loadDirective(EscapeDirective.class.getName());
     return engine;
+  }
+
+  private String resolveWikiRoot(FitNesseContext context) {
+    String wikiRoot = context.getProperty("wiki.root");
+    if (wikiRoot == null || wikiRoot.isEmpty()) {
+      return contextRoot;
+    }
+    if (!wikiRoot.startsWith("/")) {
+      wikiRoot = "/" + wikiRoot;
+    }
+    if (!wikiRoot.endsWith("/")) {
+      wikiRoot = wikiRoot + "/";
+    }
+    return wikiRoot;
   }
 }

@@ -32,47 +32,47 @@ public class FitMatcherTest {
 
   @Test
   public void testSimpleMatches() throws Exception {
-    assertMatch("_<3", new Integer(2));
-    assertNoMatch("_<3", new Integer(3));
-    assertMatch("_<4", new Integer(3));
-    assertMatch("_ < 9", new Integer(4));
-    assertMatch("<3", new Integer(2));
-    assertMatch(">4", new Integer(5));
-    assertMatch(">-3", new Integer(-2));
-    assertMatch("<3.2", new Double(3.1));
-    assertNoMatch("<3.2", new Double(3.3));
-    assertMatch("<=3", new Double(3));
-    assertMatch("<=3", new Double(2));
-    assertNoMatch("<=3", new Double(4));
-    assertMatch(">=2", new Double(2));
-    assertMatch(">=2", new Double(3));
-    assertNoMatch(">=2", new Double(1));
+    assertMatch("_<3", Integer.valueOf(2));
+    assertNoMatch("_<3", Integer.valueOf(3));
+    assertMatch("_<4", Integer.valueOf(3));
+    assertMatch("_ < 9", Integer.valueOf(4));
+    assertMatch("<3", Integer.valueOf(2));
+    assertMatch(">4", Integer.valueOf(5));
+    assertMatch(">-3", Integer.valueOf(-2));
+    assertMatch("<3.2", Double.valueOf(3.1));
+    assertNoMatch("<3.2", Double.valueOf(3.3));
+    assertMatch("<=3", Double.valueOf(3));
+    assertMatch("<=3", Double.valueOf(2));
+    assertNoMatch("<=3", Double.valueOf(4));
+    assertMatch(">=2", Double.valueOf(2));
+    assertMatch(">=2", Double.valueOf(3));
+    assertNoMatch(">=2", Double.valueOf(1));
   }
 
   @Test
   public void testExceptions() throws Exception {
-    assertException("X", new Integer(1));
+    assertException("X", Integer.valueOf(1));
     assertException("<32", "xxx");
   }
 
   @Test
   public void testMessage() throws Exception {
-    FitMatcher matcher = new FitMatcher("_>25", new Integer(3));
+    FitMatcher matcher = new FitMatcher("_>25", Integer.valueOf(3));
     assertEquals("<b>3</b>>25", matcher.message());
-    matcher = new FitMatcher(" < 32", new Integer(5));
+    matcher = new FitMatcher(" < 32", Integer.valueOf(5));
     assertEquals("<b>5</b> < 32", matcher.message());
   }
 
   @Test
   public void testTrichotomy() throws Exception {
-    assertMatch("5<_<32", new Integer(8));
-    assertNoMatch("5<_<32", new Integer(5));
-    assertNoMatch("5<_<32", new Integer(32));
-    assertMatch("10>_>5", new Integer(6));
-    assertNoMatch("10>_>5", new Integer(10));
-    assertNoMatch("10>_>5", new Integer(5));
-    assertMatch("10>=_>=5", new Integer(10));
-    assertMatch("10>=_>=5", new Integer(5));
+    assertMatch("5<_<32", Integer.valueOf(8));
+    assertNoMatch("5<_<32", Integer.valueOf(5));
+    assertNoMatch("5<_<32", Integer.valueOf(32));
+    assertMatch("10>_>5", Integer.valueOf(6));
+    assertNoMatch("10>_>5", Integer.valueOf(10));
+    assertNoMatch("10>_>5", Integer.valueOf(5));
+    assertMatch("10>=_>=5", Integer.valueOf(10));
+    assertMatch("10>=_>=5", Integer.valueOf(5));
   }
 
 }

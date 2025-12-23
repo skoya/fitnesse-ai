@@ -9,6 +9,7 @@ import fitnesse.testsystems.slim.CustomComparatorRegistry;
 import fitnesse.testsystems.slim.tables.SlimTableFactory;
 import fitnesse.wiki.WikiPageFactoryRegistry;
 import fitnesse.wikitext.parser.SymbolProvider;
+import fitnesse.vertx.VertxPluginRegistry;
 
 /**
  * Wraps old-style plugins in the new PluginFeatureFactory service.
@@ -60,6 +61,13 @@ public class LegacyPluginFeatureFactory extends PluginFeatureFactoryBase {
   public void registerCustomComparators(CustomComparatorRegistry customComparatorRegistry) throws PluginException {
     if (register(plugin, "registerCustomComparatorRegistries", CustomComparatorRegistry.class, customComparatorRegistry)) {
       LOG.info("Registered custom comparator registries from: " + getPluginDescription());
+    }
+  }
+
+  @Override
+  public void registerVertxPlugins(VertxPluginRegistry registry) throws PluginException {
+    if (register(plugin, "registerVertxPlugins", VertxPluginRegistry.class, registry)) {
+      LOG.info("Registered Vert.x plugins from: " + getPluginDescription());
     }
   }
 

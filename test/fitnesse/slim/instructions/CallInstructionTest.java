@@ -6,6 +6,8 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 public class CallInstructionTest {
@@ -20,7 +22,7 @@ public class CallInstructionTest {
     executor = mock(InstructionExecutor.class);
     nameTranslator = mock(NameTranslator.class);
 
-    when(executor.call(anyString(), anyString(), anyVararg())).thenReturn(RESULT);
+    when(executor.call(anyString(), anyString(), any(Object[].class))).thenReturn(RESULT);
     when(nameTranslator.translate(anyString())).thenAnswer(returnsFirstArg());
   }
 

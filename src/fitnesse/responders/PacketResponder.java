@@ -15,8 +15,8 @@ import fitnesse.wiki.PathParser;
 import fitnesse.wiki.WikiPage;
 import fitnesse.wiki.WikiPagePath;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -25,8 +25,8 @@ import java.util.List;
 public class PacketResponder implements SecureResponder {
   private SimpleResponse response;
   private WikiPage page;
-  private JSONObject packet;
-  List<JSONObject> tables = new ArrayList<>();
+  private JsonObject packet;
+  JsonArray tables = new JsonArray();
   private String jsonpFunction;
 
   @Override
@@ -48,19 +48,23 @@ public class PacketResponder implements SecureResponder {
   }
 
   private void buildPacket() throws UnsupportedEncodingException {
-    packet = new JSONObject();
+    tables = new JsonArray();
+    packet = new JsonObject();
     String html = page.getHtml();
 
     TableScanner scanner = new HtmlTableScanner(html);
 
     addTablesToPacket(scanner);
-    if (jsonpFunction != null)
-      response.setContent(String.format("%s(%s)", jsonpFunction, packet.toString(1)));
-    else
-      response.setContent(packet.toString(1));
+    JsonObject bodyObj = new JsonObject().put("tables", tables);
+    String body = tables.isEmpty() ? "{\"tables\": []}" : bodyObj.encode();
+    if (jsonpFunction != null) {
+      response.setContent(String.format("%s(%s)", jsonpFunction, body));
+    } else {
+      response.setContent(body);
+    }
   }
 
-  private void addTablesToPacket(TableScanner scanner) throws JSONException {
+  private void addTablesToPacket(TableScanner scanner) {
     for (int i = 0; i < scanner.getTableCount(); i++) {
       Table t = scanner.getTable(i);
       addTableToPacket(t);
@@ -68,9 +72,9 @@ public class PacketResponder implements SecureResponder {
     packet.put("tables", tables);
   }
 
-  private void addTableToPacket(Table t) throws JSONException {
-    JSONObject table = new JSONObject();
-    JSONObject[] parents = new JSONObject[10];
+  private void addTableToPacket(Table t) {
+    JsonObject table = new JsonObject();
+    JsonObject[] parents = new JsonObject[10];
     parents[0] = table;
     for (int row = 0; row < t.getRowCount(); row++) {
       List<String> rowList = getRowFromTable(t, row);
@@ -79,7 +83,7 @@ public class PacketResponder implements SecureResponder {
         String name = rowList.get(indent);
         String value = rowList.size() > (indent + 1) ? rowList.get(indent + 1) : "";
         if (null == value || "".equals(value)) {
-          JSONObject parent = new JSONObject();
+          JsonObject parent = new JsonObject();
           parents[indent].put(name, parent);
           parents[indent + 1] = parent;
         } else {

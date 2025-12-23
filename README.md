@@ -1,8 +1,19 @@
-# [FitNesse](https://fitnesse.org/)  [![maven central](https://maven-badges.herokuapp.com/maven-central/org.fitnesse/fitnesse/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/org.fitnesse/fitnesse) [![SonarQube Tech Debt](https://img.shields.io/sonar/http/nemo.sonarqube.org/org.fitnesse:fitnesse/tech_debt.svg)](http://nemo.sonarqube.org/dashboard/index?id=org.fitnesse%3Afitnesse)
+# [FitNesse.ai](https://fitnesse.org/)  [![maven central](https://maven-badges.herokuapp.com/maven-central/org.fitnesse/fitnesse/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/org.fitnesse/fitnesse) [![SonarQube Tech Debt](https://img.shields.io/sonar/http/nemo.sonarqube.org/org.fitnesse:fitnesse/tech_debt.svg)](http://nemo.sonarqube.org/dashboard/index?id=org.fitnesse%3Afitnesse)
 
-Welcome to FitNesse, the fully integrated stand-alone acceptance testing framework and wiki.
+Welcome to FitNesse.ai, the fully integrated stand-alone acceptance testing framework and wiki with AI + Vert.x extensions.
 
 To get started, check out the [FitNesse website](https://fitnesse.org/)!
+
+## What’s new in FitNesse.ai
+
+- Vert.x-powered server and routing, including event bus integrations.
+- AI assistant UI dock and `/api/ai/assist` endpoint for local prompt workflows.
+- MCP support with optional gRPC and WebSocket endpoints.
+- Native PlantUML (server-side SVG rendering by default, with optional remote server override).
+- Native Mermaid blocks with client-side rendering.
+- Search + History quick links, improved run monitor (`/run-monitor`).
+- Prometheus metrics endpoint (`/metrics`) when enabled.
+- Breadcrumb fixes for `/wiki` paths in the Vert.x server.
 
 
 
@@ -23,7 +34,7 @@ Have a bug or a feature request? [Please open a new issue](https://github.com/un
 
 The latest stable build of FitNesse can be [downloaded here](https://github.com/unclebob/fitnesse/actions) by clicking the latest workflow and clicking the `libs` artifact.
 
-**Note**: the `libs` artifact contains 2 jars. `fitnesse.jar` is for use in Maven or Ivy. Users who just want to run FitNesse by itself should use `fitnesse-standalone.jar` instead of `fitnesse.jar`.
+**Note**: the `libs` artifact contains 2 jars. `fitnesse.jar` is for use in Maven or Ivy. Users who just want to run FitNesse.ai by itself should use `fitnesse-ai-standalone.jar` (generated via `./gradlew fitnesseAiStandaloneJar`) instead of `fitnesse.jar`.
 
 ## Developers
 

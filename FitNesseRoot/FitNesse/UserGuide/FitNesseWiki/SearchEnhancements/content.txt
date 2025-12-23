@@ -1,0 +1,20 @@
+!1 Search filters and paging
+The search page now supports tags, page-type filters, and paging for large wiki trees.
+
+!2 Using the UI
+ * Open !style_code(/search) or use the Search link in the nav.
+ * Filters:
+   * !style_code(tags): comma-separated suite tags
+   * !style_code(pageType): !style_code(suite) or !style_code(test) (leave blank for any)
+   * !style_code(type): !style_code(title) or !style_code(content)
+ * Paging: set !style_code(limit) (page size) and !style_code(offset) (start index) to walk results.
+ * Results show snippets with the applied filters; keyboard shortcuts still focus the search box.
+
+!2 API usage
+ * !style_code(GET /api/search?q=&type=&tags=&pageType=&limit=&offset=)
+ * All parameters are optional; defaults: !style_code(type=content), !style_code(limit=50), !style_code(offset=0).
+ * Responses include snippets and total count suitable for client-side pagination.
+
+!2 Tips
+ * Combine tags with !style_code(pageType=test) to target runnable test pages.
+ * For large trees, start with a small !style_code(limit) (e.g., 25) and increment !style_code(offset) to page through.

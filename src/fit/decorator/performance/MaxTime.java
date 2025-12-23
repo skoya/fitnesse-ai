@@ -20,7 +20,7 @@ public class MaxTime extends TimeBasedFixtureDecorator {
   @Override
   protected void run(Fixture fixture, Parse table) {
     super.run(fixture, table);
-    summary.put(ACTUAL_TIME_TAKEN, new Long(elapsedTime));
+    summary.put(ACTUAL_TIME_TAKEN, Long.valueOf(elapsedTime));
   }
 
   @Override
@@ -29,7 +29,7 @@ public class MaxTime extends TimeBasedFixtureDecorator {
       throw new InvalidInputException("Max Time must be specified");
     }
     maxTime = Long.parseLong(arguments[0]);
-    summary.put(MAX_TIME, new Long(maxTime));
+    summary.put(MAX_TIME, Long.valueOf(maxTime));
   }
 
   @Override

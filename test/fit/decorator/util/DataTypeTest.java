@@ -64,19 +64,19 @@ public class DataTypeTest {
 
   @Test
   public void testAddToMethodAddsGivenValueGivenNumberOfTimesToOriginalValue() throws Exception {
-    assertEquals("10", DataType.INTEGER.addTo("10", new Integer(5), 0));
-    assertEquals("15", DataType.INTEGER.addTo("10", new Integer(5), 1));
-    assertEquals("20", DataType.INTEGER.addTo("10", new Integer(5), 2));
-    assertEquals("10.2", DataType.DOUBLE.addTo("10.2", new Double(5.1), 0));
-    assertEquals("15.3", DataType.DOUBLE.addTo("10.2", new Double(5.1), 1));
-    assertEquals("20.4", DataType.DOUBLE.addTo("10.2", new Double(5.1), 2));
+    assertEquals("10", DataType.INTEGER.addTo("10", Integer.valueOf(5), 0));
+    assertEquals("15", DataType.INTEGER.addTo("10", Integer.valueOf(5), 1));
+    assertEquals("20", DataType.INTEGER.addTo("10", Integer.valueOf(5), 2));
+    assertEquals("10.2", DataType.DOUBLE.addTo("10.2", Double.valueOf(5.1), 0));
+    assertEquals("15.3", DataType.DOUBLE.addTo("10.2", Double.valueOf(5.1), 1));
+    assertEquals("20.4", DataType.DOUBLE.addTo("10.2", Double.valueOf(5.1), 2));
     assertEquals("Hello", DataType.STRING.addTo("Hello", " World", 0));
     assertEquals("Hello World", DataType.STRING.addTo("Hello", " World", 1));
     assertEquals("Hello World World", DataType.STRING.addTo("Hello", " World", 2));
-    assertEquals("12/02/2006", DataType.DATE.addTo("12/02/2006", new Integer(5), 0));
-    assertEquals("12/07/2006", DataType.DATE.addTo("12/02/2006", new Integer(5), 1));
-    assertEquals("01/01/2007", DataType.DATE.addTo("12/31/2006", new Integer(1), 1));
-    assertEquals("01/21/2007", DataType.DATE.addTo("12/02/2006", new Integer(5), 10));
+    assertEquals("12/02/2006", DataType.DATE.addTo("12/02/2006", Integer.valueOf(5), 0));
+    assertEquals("12/07/2006", DataType.DATE.addTo("12/02/2006", Integer.valueOf(5), 1));
+    assertEquals("01/01/2007", DataType.DATE.addTo("12/31/2006", Integer.valueOf(1), 1));
+    assertEquals("01/21/2007", DataType.DATE.addTo("12/02/2006", Integer.valueOf(5), 10));
   }
 
   @Test

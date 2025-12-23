@@ -76,6 +76,7 @@ public class FitNesse {
   /**
    * The default thread factory - creates daemon threads
    */
+  @SuppressWarnings("removal")
   static class DaemonThreadFactory implements ThreadFactory {
     private final ThreadGroup group;
     private final AtomicInteger threadNumber = new AtomicInteger(1);

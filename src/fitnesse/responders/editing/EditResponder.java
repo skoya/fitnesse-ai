@@ -20,6 +20,7 @@ import fitnesse.wiki.PageData;
 import fitnesse.wiki.PathParser;
 import fitnesse.wiki.WikiPage;
 import fitnesse.wiki.WikiPagePath;
+import fitnesse.wiki.VersionInfo;
 
 public class EditResponder implements SecureResponder {
   public static final String CONTENT_INPUT_NAME = "pageContent";
@@ -110,6 +111,17 @@ public class EditResponder implements SecureResponder {
     html.put(TEMPLATE_MAP, TemplateUtil.getTemplateMap(page));
     html.put("suites", pageData.getAttribute(PageData.PropertySUITES));
     html.put(CONTENT_INPUT_NAME, HtmlUtil.escapeHTML(firstTimeForNewPage ? defaultNewPageContent : content));
+    html.put("currentVersion", latestVersionName(page));
+  }
+
+  private String latestVersionName(WikiPage page) {
+    VersionInfo latest = null;
+    for (VersionInfo version : page.getVersions()) {
+      if (latest == null || version.compareTo(latest) > 0) {
+        latest = version;
+      }
+    }
+    return latest == null ? "" : latest.getName();
   }
 
   @Override

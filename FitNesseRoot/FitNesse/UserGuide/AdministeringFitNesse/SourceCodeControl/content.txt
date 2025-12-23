@@ -1,3 +1,22 @@
+!2 Git-native doc store (recommended)
+FitNesse now supports a native Git-backed doc store with history UI and conflict handling. When enabled, every page save writes to the working tree and creates a git commit (with author inferred from authentication when available). Conflict handling supports configurable merge strategies (fast-forward, merge, rebase, squash, ours, theirs) and a manual resolution path when auto-merge is unsafe. The history, diff, and revert views surface git commits directly in the UI.
+
+Key behaviors:
+ * Page content, properties, and attachments are written to the git working tree in the standard !-FitNesse-! layout.
+ * Commits use a deterministic message template (e.g., !-wiki: update <PagePath>-!) and include optional reason/correlation data from the UI.
+ * Merge strategy is configurable per environment; unresolved conflicts are surfaced to the user rather than committed with inline markers.
+ * History and diff screens read from git; revert creates a new commit that restores the selected version.
+
+Compatibility:
+ * Existing !-FitNesseRoot-! folders still work unchanged.
+ * A filesystem-only mode remains available for air-gapped or read/write sandbox setups.
+
+Configuration:
+ * Select git-native doc storage in your server configuration (Vert.x env or config file).
+ * Choose merge strategy and author mapping (e.g., map authenticated users to git author/email).
+ * Repo must be initialized; the server can commit on save once the working tree exists.
+
+!2 Legacy version controllers (still available)
 It is relatively simple to marry !-FitNesse-! to your source code control system. By default FitNesse is using a Zip-file based version control mechanism. As soon as a page is updated, a backup is made of the current version and the new version is put into place. Closely tied to the version controller is the .RecentChanges page. This page can be consulted to see who change what.
 
 The most basic implementation is the !-SimpleFileVersionsController-!. It just stores the content. This class is used as a basis for the !-ZipFileVersionsController-! and [[!-Git versions controller-!][https://github.com/amolenaar/fitnesse-git-plugin]].

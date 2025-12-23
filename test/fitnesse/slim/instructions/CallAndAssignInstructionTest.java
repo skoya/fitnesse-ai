@@ -8,8 +8,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.anyVararg;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -26,7 +26,7 @@ public class CallAndAssignInstructionTest {
     executor = mock(InstructionExecutor.class);
     nameTranslator = mock(NameTranslator.class);
 
-    when(executor.callAndAssign(anyString(), anyString(), anyString(), anyVararg())).thenReturn(RESULT);
+    when(executor.callAndAssign(anyString(), anyString(), anyString(), any(Object[].class))).thenReturn(RESULT);
     when(nameTranslator.translate(anyString())).thenAnswer(returnsFirstArg());
   }
 

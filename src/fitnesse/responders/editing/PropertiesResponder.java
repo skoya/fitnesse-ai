@@ -23,8 +23,8 @@ import fitnesse.wiki.WikiPage;
 import fitnesse.wiki.WikiPagePath;
 import fitnesse.wiki.WikiPageProperty;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
@@ -85,8 +85,8 @@ public class PropertiesResponder implements SecureResponder {
 
   private void makeContent(FitNesseContext context, Request request) throws UnsupportedEncodingException {
     if ("json".equals(request.getInput("format"))) {
-      JSONObject jsonObject = makeJson();
-      response.setContent(jsonObject.toString(1));
+      JsonObject jsonObject = makeJson();
+      response.setContent(jsonObject.encodePrettily());
     } else {
       String html = makeHtml(context, request);
 
@@ -94,9 +94,9 @@ public class PropertiesResponder implements SecureResponder {
     }
   }
 
-  private JSONObject makeJson() {
+  private JsonObject makeJson() {
     response.setContentType(Response.Format.JSON);
-    JSONObject jsonObject = new JSONObject();
+    JsonObject jsonObject = new JsonObject();
     String[] attributes = { TEST.toString(), SEARCH,
         EDIT, PROPERTIES, VERSIONS, REFACTOR,
         WHERE_USED, RECENT_CHANGES, SUITE.toString(),
@@ -108,10 +108,10 @@ public class PropertiesResponder implements SecureResponder {
       jsonObject.put(HELP, pageData.getAttribute(HELP));
     }
     if (pageData.hasAttribute(SUITES)) {
-      JSONArray tags = new JSONArray();
+      JsonArray tags = new JsonArray();
       for(String tag : pageData.getAttribute(SUITES).split(",")) {
         if (StringUtils.isNotBlank(tag)) {
-          tags.put(tag.trim());
+          tags.add(tag.trim());
         }
       }
       jsonObject.put(SUITES, tags);
@@ -119,7 +119,7 @@ public class PropertiesResponder implements SecureResponder {
     return jsonObject;
   }
 
-  private void addJsonAttribute(JSONObject jsonObject, String attribute) {
+  private void addJsonAttribute(JsonObject jsonObject, String attribute) {
     jsonObject.put(attribute, pageData.hasAttribute(attribute));
   }
 

@@ -41,6 +41,7 @@
  #end
 #else
  <input type="hidden" name="responder" value="saveData"/>
+ <input type="hidden" name="expectedVersion" value="$!currentVersion"/>
 #end
  <fieldset>
   <label for="helptext">Help text:</label>
@@ -59,6 +60,16 @@
    #end
   </select>
 
+ </div>
+
+ <div class="template-panel" id="templatePanel">
+  <h3>Templates</h3>
+  <div class="template-actions">
+   <select id="templatePicker"></select>
+   <button type="button" class="button" id="templateInsert">Insert</button>
+   <a class="button" id="templateEdit" href="#" target="_blank" rel="noopener">Edit</a>
+   <a class="button" id="templateLibrary" href="${contextRoot}TemplateLibrary" target="_blank" rel="noopener">Library</a>
+  </div>
  </div>
 
 
@@ -81,6 +92,92 @@ $(function () {
 
   var editor = Wysiwyg.initialize(document.getElementById('pageContent'));
   if (editor) {
+    var templateInserter = new TemplateInserter();
+    var templatePicker = $('#templatePicker');
+    templatePicker.html($('#templateMap').html());
+
+    function templatePath(value) {
+      if (!value) { return ''; }
+      return value.charAt(0) === '.' ? value.substring(1) : value;
+    }
+
+    function updateTemplateLinks() {
+      var value = templatePicker.val();
+      var path = templatePath(value);
+      if (!path) {
+        $('#templateEdit').attr('href', '#');
+        return;
+      }
+      $('#templateEdit').attr('href', '${contextRoot}' + path + '?edit');
+    }
+
+    updateTemplateLinks();
+    templatePicker.on('change', updateTemplateLinks);
+    $('#templateInsert').on('click', function () {
+      var value = templatePicker.val();
+      if (!value) { return; }
+      var doc = editor.codeMirrorEditor.getDoc();
+      templateInserter.insertInto(value, doc, function () {
+        if (editor.activeEditor() === "wysiwyg") {
+          editor.loadWysiwygDocument();
+        }
+      });
+    });
+
+    var editorHost = $(editor.frame).parent();
+    editorHost.css('position', 'relative');
+    var commentButton = $('<button type="button" class="table-comment-button">Comment table</button>');
+    editorHost.append(commentButton);
+    commentButton.hide();
+
+    var activeTable = null;
+    function showCommentButton(table, event) {
+      var tableRect = table.getBoundingClientRect();
+      var hostRect = editorHost[0].getBoundingClientRect();
+      var top = tableRect.top - hostRect.top + 6;
+      var left = tableRect.right - hostRect.left - commentButton.outerWidth() - 6;
+      commentButton.css({ top: top + 'px', left: left + 'px' }).show();
+    }
+
+    $(editor.frame).on('mousemove', function (event) {
+      var table = $(event.target).closest('table')[0];
+      if (!table) {
+        activeTable = null;
+        commentButton.hide();
+        return;
+      }
+      activeTable = table;
+      showCommentButton(table, event);
+    });
+
+    $(editor.frame).on('mouseleave', function () {
+      activeTable = null;
+      commentButton.hide();
+    });
+
+    commentButton.on('click', function () {
+      if (!activeTable) { return; }
+      var $table = $(activeTable);
+      var $tbody = $table.find('tbody').first();
+      if ($tbody.length === 0) { $tbody = $table; }
+      var $firstRow = $tbody.find('tr').first();
+      if ($firstRow.length && $firstRow.hasClass('hidden')) {
+        var firstCell = $firstRow.find('td, th').first().text().trim().toLowerCase();
+        if (firstCell === 'comment') {
+          return;
+        }
+      }
+      var columnCount = $firstRow.find('td, th').length || 1;
+      var $row = $('<tr class="hidden"></tr>');
+      var $cell = $('<td></td>').text('comment');
+      if (columnCount > 1) {
+        $cell.attr('colspan', columnCount);
+      }
+      $row.append($cell);
+      $tbody.prepend($row);
+      editor.selectionChanged();
+    });
+
     // On cancel button:
 
     function fieldValues () {

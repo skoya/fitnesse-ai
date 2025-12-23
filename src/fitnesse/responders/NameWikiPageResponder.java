@@ -9,7 +9,7 @@ import fitnesse.http.Request;
 import fitnesse.wiki.PageData;
 import fitnesse.wiki.WikiPage;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONArray;
+import io.vertx.core.json.JsonArray;
 
 import java.util.*;
 
@@ -20,8 +20,8 @@ public class NameWikiPageResponder extends BasicResponder {
 
     String format = request.getInput("format");
     if ("json".equalsIgnoreCase(format)) {
-      JSONArray jsonPages = new JSONArray(lines);
-      return jsonPages.toString();
+      JsonArray jsonPages = new JsonArray(lines);
+      return jsonPages.encode();
     }
     return StringUtils.join(lines, System.getProperty("line.separator"));
   }

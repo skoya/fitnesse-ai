@@ -11,6 +11,7 @@ import fitnesse.testsystems.slim.tables.SlimTableFactory;
 import fitnesse.wiki.WikiPageFactoryRegistry;
 import fitnesse.wikitext.MarkUpSystems;
 import fitnesse.wikitext.parser.SymbolProvider;
+import fitnesse.vertx.VertxPluginRegistry;
 
 public interface PluginFeatureFactory {
 
@@ -51,4 +52,7 @@ public interface PluginFeatureFactory {
   }
 
   default void registerMarkupSystems(MarkUpSystems systems) {}
+
+  default void registerVertxPlugins(VertxPluginRegistry registry) throws PluginException {
+  }
 }

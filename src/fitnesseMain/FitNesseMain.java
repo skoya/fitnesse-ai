@@ -12,6 +12,10 @@ import fitnesse.socketservice.SslParameters;
 import fitnesse.socketservice.SslServerSocketFactory;
 import fitnesse.updates.WikiContentUpdater;
 import fitnesse.wiki.PathParser;
+import fitnesse.vertx.FitNesseVertxMain;
+import fitnesse.vertx.VertxConfig;
+import fitnesse.vertx.VertxConfigLoader;
+import io.vertx.core.Vertx;
 
 import java.io.*;
 import java.net.BindException;
@@ -52,6 +56,13 @@ public class FitNesseMain {
   }
 
   public Integer launchFitNesse(Arguments arguments) throws Exception {
+    // Default: do not attempt to install a SecurityManager on modern JDKs unless explicitly requested.
+    if (System.getProperty("prevent.system.exit") == null) {
+      System.setProperty("prevent.system.exit", "false");
+    }
+    if (System.getProperty("java.security.manager") == null) {
+      System.setProperty("java.security.manager", "allow");
+    }
     ContextConfigurator contextConfigurator = ContextConfigurator.systemDefaults();
     contextConfigurator = contextConfigurator.updatedWith(System.getProperties());
     contextConfigurator = contextConfigurator.updatedWith(ConfigurationParameter.loadProperties(new File(arguments.getConfigFile(contextConfigurator))));
@@ -131,14 +142,38 @@ public class FitNesseMain {
 
         return exitCodeListener.getFailCount();
       } else {
-        if("true".equalsIgnoreCase(context.getProperty(LOCALHOST_ONLY.getKey()))) {
-          LOG.info("Starting FitNesse on port: " + context.port + " (loopback only)");
+        boolean useVertx = !"false".equalsIgnoreCase(readFlag("FITNESSE_VERTX_WEB"));
+        if (useVertx) {
+          LOG.info("Starting FitNesse Vert.x web on port: " + context.port);
+          Vertx vertx = FitNesseVertxMain.createVertx();
+          VertxConfig cfg = VertxConfigLoader.load(vertx, VertxConfig.fromContext(context));
+          FitNesseVertxMain.startServer(vertx, cfg, context);
         } else {
-          LOG.info("Starting FitNesse on port: " + context.port);
+          if (!"true".equalsIgnoreCase(readFlag("FITNESSE_LEGACY_SOCKET"))) {
+            LOG.severe("Legacy FitNesseServer/SocketService stack is retired. Enable FITNESSE_VERTX_WEB or set FITNESSE_LEGACY_SOCKET=true to force legacy startup.");
+            return 1;
+          }
+          if("true".equalsIgnoreCase(context.getProperty(LOCALHOST_ONLY.getKey()))) {
+            LOG.info("Starting legacy FitNesse on port: " + context.port + " (loopback only)");
+          } else {
+            LOG.info("Starting legacy FitNesse on port: " + context.port);
+          }
+          ServerSocket serverSocket = createServerSocket(context, classLoader);
+          context.fitNesse.start(serverSocket);
         }
-        ServerSocket serverSocket = createServerSocket(context, classLoader);
-        context.fitNesse.start(serverSocket);
       }
+    }
+    return null;
+  }
+
+  private static String readFlag(String key) {
+    String fromProp = System.getProperty(key);
+    if (fromProp != null && !fromProp.isEmpty()) {
+      return fromProp;
+    }
+    String fromEnv = System.getenv(key);
+    if (fromEnv != null && !fromEnv.isEmpty()) {
+      return fromEnv;
     }
     return null;
   }

@@ -23,11 +23,29 @@ public class InProcessSlimClientBuilder extends ClientBuilder<SlimClient> {
 
   @Override
   public SlimClient build() {
-    final SlimService.Options options = SlimService.parseCommandLine(getSlimFlags());
-    Integer statementTimeout = options != null ? options.statementTimeout : null;
-    FixtureInteraction interaction = options != null ? options.interaction : JavaSlimFactory.createInteraction(null, classLoader);
+    String[] slimFlags = getSlimFlags();
 
-    SlimServer slimServer = createSlimServer(interaction, statementTimeout, isDebug());
+    String interactionClassName = null;
+    Integer timeout = null;
+    boolean verbose = false;
+
+    for (int i = 0; i < slimFlags.length; i++) {
+      String flag = slimFlags[i];
+      if ("-i".equals(flag) && i + 1 < slimFlags.length) {
+        interactionClassName = slimFlags[++i];
+      } else if ("-s".equals(flag) && i + 1 < slimFlags.length) {
+        try {
+          timeout = Integer.parseInt(slimFlags[++i]);
+        } catch (NumberFormatException ignored) {
+          // fall back to default timeout (null)
+        }
+      } else if ("-v".equals(flag)) {
+        verbose = true;
+      }
+    }
+
+    FixtureInteraction interaction = JavaSlimFactory.createInteraction(interactionClassName, classLoader);
+    SlimServer slimServer = createSlimServer(interaction, timeout, verbose);
     return new InProcessSlimClient(getTestSystemName(), slimServer, getExecutionLogListener(), classLoader);
   }
 

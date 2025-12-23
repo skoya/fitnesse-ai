@@ -121,6 +121,10 @@ public class FitNesseContext {
     return String.format(unifiedPathPattern("%s/%s"), rootPath, rootDirectoryName);
   }
 
+  public String getRootDirectoryName() {
+    return rootDirectoryName;
+  }
+
   public Properties getProperties() {
     return properties;
   }

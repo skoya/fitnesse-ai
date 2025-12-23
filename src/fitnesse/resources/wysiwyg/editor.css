@@ -103,4 +103,40 @@ tt.nested:after {
  content: "</nested>";
 }
 
+.table-comment-button {
+ position: absolute;
+ z-index: 5;
+ padding: 4px 8px;
+ border: 1px solid #c4c4c4;
+ border-radius: 4px;
+ background: #ffffff;
+ color: #333333;
+ font-size: 12px;
+ cursor: pointer;
+ box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.table-comment-button:hover {
+ background: #f4f4f4;
+}
+
+.template-panel {
+ margin: 10px 0 0 0;
+ padding: 10px;
+ border: 1px solid #dcdcdc;
+ border-radius: 6px;
+ background: #fafafa;
+}
+
+.template-panel h3 {
+ margin: 0 0 8px 0;
+ font-size: 14px;
+}
+
+.template-panel .template-actions {
+ display: flex;
+ gap: 8px;
+ align-items: center;
+ flex-wrap: wrap;
+}
 

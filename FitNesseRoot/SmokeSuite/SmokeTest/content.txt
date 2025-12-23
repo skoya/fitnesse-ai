@@ -1,0 +1,5 @@
+!|script|fitnesse.slim.test.TestSlim|
+|set string|hello|
+|check|get string arg|hello|
+|check|return int|7|
+|check|echo int|3|3|

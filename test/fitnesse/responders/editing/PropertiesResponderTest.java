@@ -15,8 +15,8 @@ import fitnesse.wiki.WikiImportProperty;
 import fitnesse.wiki.WikiPage;
 import fitnesse.wiki.WikiPageProperty;
 import fitnesse.wiki.WikiPageUtil;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -104,7 +104,7 @@ public class PropertiesResponderTest {
     SimpleResponse response = (SimpleResponse) responder.makeResponse(context, request);
     assertEquals("application/json", response.getContentType());
     String jsonText = response.getContent();
-    JSONObject jsonObject = new JSONObject(jsonText);
+    JsonObject jsonObject = new JsonObject(jsonText);
     assertTrue(jsonObject.getBoolean("Test"));
     assertTrue(jsonObject.getBoolean("Search"));
     assertTrue(jsonObject.getBoolean("Edit"));
@@ -115,7 +115,7 @@ public class PropertiesResponderTest {
     assertTrue(jsonObject.getBoolean("RecentChanges"));
     assertTrue(jsonObject.getBoolean("Files"));
 
-    assertFalse(jsonObject.has("Help"));
+    assertFalse(jsonObject.containsKey("Help"));
     assertFalse(jsonObject.getBoolean("Suite"));
     assertFalse(jsonObject.getBoolean("Prune"));
     assertFalse(jsonObject.getBoolean(WikiImportProperty.SECURE_READ));
@@ -141,10 +141,10 @@ public class PropertiesResponderTest {
     SimpleResponse response = (SimpleResponse) responder.makeResponse(context, request);
     assertEquals("application/json", response.getContentType());
     String jsonText = response.getContent();
-    JSONObject jsonObject = new JSONObject(jsonText);
+    JsonObject jsonObject = new JsonObject(jsonText);
 
     assertEquals("help text", jsonObject.getString("Help"));
-    JSONArray suites = jsonObject.getJSONArray("Suites");
+    JsonArray suites = jsonObject.getJsonArray("Suites");
     assertEquals("foo", suites.getString(0));
     assertEquals("bar", suites.getString(1));
 

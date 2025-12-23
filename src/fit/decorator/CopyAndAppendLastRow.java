@@ -22,7 +22,7 @@ public class CopyAndAppendLastRow extends FixtureDecorator {
       throw new InvalidInputException("Count for number of times to add the last row must be specified");
     }
     numberOfTimes = Integer.parseInt(arguments[0]);
-    summary.put(NUMBER_OF_TIMES, new Integer(numberOfTimes));
+    summary.put(NUMBER_OF_TIMES, Integer.valueOf(numberOfTimes));
   }
 
   @Override

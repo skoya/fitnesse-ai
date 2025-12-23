@@ -16,6 +16,7 @@ import fitnesse.testsystems.slim.tables.SlimTableFactory;
 import fitnesse.wiki.WikiPageFactoryRegistry;
 import fitnesse.wikitext.MarkUpSystems;
 import fitnesse.wikitext.parser.SymbolProvider;
+import fitnesse.vertx.VertxPluginRegistry;
 
 import java.io.File;
 import java.io.IOException;
@@ -155,6 +156,12 @@ public class PluginsLoader {
   public void loadMarkupSystems(MarkUpSystems systems) {
     for (PluginFeatureFactory pff : pluginFeatureFactories) {
       pff.registerMarkupSystems(systems);
+    }
+  }
+
+  public void loadVertxPlugins(VertxPluginRegistry registry) throws PluginException {
+    for (PluginFeatureFactory pff : pluginFeatureFactories) {
+      pff.registerVertxPlugins(registry);
     }
   }
 }

@@ -45,7 +45,7 @@ public abstract class DataType {
     protected String addTo(String originalValue, Object value, int numberofTime) {
       double doubleValue = ((Double) value).doubleValue() * numberofTime;
       double results = Double.parseDouble(originalValue) + doubleValue;
-      return String.valueOf(new Double(results).floatValue());
+      return String.valueOf(Double.valueOf(results).floatValue());
     }
 
     @Override

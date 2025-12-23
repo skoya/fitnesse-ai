@@ -1,0 +1,32 @@
+!1 MCP adapters (HTTP, WebSocket, gRPC)
+MCP (Model Context Protocol) exposes wiki pages and search to external agents. All adapters share the same backing service and honor authentication settings.
+
+!2 HTTP+JSON
+|!meta endpoint|!meta description|
+|!style_code(GET /mcp/health)|Basic health check|
+|!style_code(GET /mcp/resources?limit&offset)|List pages (paged)|
+|!style_code(GET /mcp/page/*)|Read a page (content + last modified)| 
+|!style_code(GET /mcp/search?q&limit&offset)|Search content with paging|
+
+!2 WebSocket (!-/mcp/ws-!)
+Send JSON messages with !style_code(type) and optional !style_code(requestId). Supported types:
+|!meta type|!meta payload|!meta response|
+|health|{}|health_response {status}|
+|list|{limit,offset}|list_response {resources,total,limit,offset}|
+|read|{path}|read_response {found?,path,name,content,lastModified,error?}|
+|search|{q,limit,offset}|search_response {results,limit,offset}|
+
+!2 gRPC
+ * Service: !style_code(fitnesse.mcp.proto.FitnesseMcp)
+ * Methods: !style_code(Health), !style_code(ListResources), !style_code(ReadPage), !style_code(Search)
+ * Proto: !style_code(src/fitnesse/mcp/proto/fitnesse_mcp.proto)
+ * Enable with !style_code(FITNESSE_MCP_GRPC_ENABLED=true); default port from !style_code(FITNESSE_MCP_GRPC_PORT).
+
+!2 Enabling/disabling
+|!meta flag|!meta default|!meta effect|
+|FITNESSE_MCP_WS_ENABLED|false|Expose the WebSocket adapter at !-/mcp/ws-!|
+|FITNESSE_MCP_GRPC_ENABLED|false|Start the gRPC server on !-FITNESSE_MCP_GRPC_PORT-!|
+
+!2 Auth and audit
+ * When !style_code(FITNESSE_AUTH_ENABLED=true), MCP requires Basic auth (HTTP/WS) or gRPC metadata auth.
+ * Audit events are appended to !style_code(.fitnesse/audit/mcp-audit.jsonl) with method, actor, resource, and status.

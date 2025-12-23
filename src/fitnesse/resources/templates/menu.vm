@@ -9,6 +9,12 @@
     #if( $actions.withEdit && !$actions.imported)
         <li><a class="nav-link text-secondary" href="$localPath?edit" accesskey="e">Edit</a></li>
     #end
+    #if( $actions.withSearch )
+        <li><a class="nav-link text-secondary" href="${contextRoot}search" accesskey="s">Search</a></li>
+    #end
+    #if( $actions.withVersions )
+        <li><a class="nav-link text-secondary" href="${contextRoot}history/$localPath">History</a></li>
+    #end
     #if( $actions.imported )
         <li><a class="nav-link text-secondary" href="$localPath?edit" accesskey="e">Edit Locally</a></li>
     #end

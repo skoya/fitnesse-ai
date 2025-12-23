@@ -38,6 +38,10 @@ public class SymbolType implements Matchable {
             .wikiMatcher(new Matcher().startLine().string("]!"));
     public static final SymbolType ClosePreformat = new SymbolType("ClosePreformat")
             .wikiMatcher(new Matcher().string("}}}"));
+    public static final SymbolType ClosePlantUml = new SymbolType("ClosePlantUml")
+            .wikiMatcher(new Matcher().startLine().string("!endplantuml"));
+    public static final SymbolType CloseMermaid = new SymbolType("CloseMermaid")
+            .wikiMatcher(new Matcher().startLine().string("!endmermaid"));
     public static final SymbolType Colon = new SymbolType("Colon")
             .wikiMatcher(new Matcher().string(":"));
     public static final SymbolType Comma = new SymbolType("Comma")
@@ -159,4 +163,3 @@ public class SymbolType implements Matchable {
         decorators.forEach(decorator -> decorator.handleParsedSymbol(symbol, variableSource));
     }
 }
-

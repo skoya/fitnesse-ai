@@ -33,7 +33,7 @@ public class SuiteExecutionReportTest {
   }
   @Test
   public void shouldNotBeEqualIfDifferentTypes() throws Exception {
-    assertFalse(new SuiteExecutionReport(new FitNesseVersion("version"), "here").equals(new Integer(0)));
+    assertFalse(new SuiteExecutionReport(new FitNesseVersion("version"), "here").equals(Integer.valueOf(0)));
   }
 
   @Test

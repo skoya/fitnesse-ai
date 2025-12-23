@@ -1,7 +1,7 @@
 Various plugins are supported by FitNesse.
 
 !3 Overview
-Below are a list of customizations you can make via this plugin architecture.  Each plugin will require an entry in the ''plugins.properties'' file.  This should be located in the working directory of FitNesse.   If the file does not exist FitNesse will run normally.  To enable a plugin, create this file, and add the specified entries.  All plugins will require complied Java code so make sure that the class path contains an entry to locate your plugins.
+Below are a list of customizations you can make via this plugin architecture. Plugins can be enabled by ''plugins.properties'' entries '''or''' by Java !-ServiceLoader-! providers. If the file does not exist FitNesse will run normally. All plugins require compiled Java code, so ensure the class path contains your plugin jars.
 
 See also: CommandLineArguments.
 
@@ -52,6 +52,19 @@ Responders =addChild:fitnesse.responders.DisabledResponder,new:org.fitnesse.resp
 ''required property:'' '''!-Authenticator-! = <class name>'''
 
 ''motivation:'' Custom security scheme. The class provided must extend the fitnesse.authentication.Authenticator class.  The class will be instantiated and asked ''isAuthenticated(String username, String password)'' when ever authentication is required.  See SecurityDescription for more information on security.
+
+!3 OIDC / OAuth2 (Vert.x runtime)
+The Vert.x server can validate OIDC bearer tokens. Configure via environment variables (see VertxServer):
+ * !style_code(FITNESSE_AUTH_ENABLED=true)
+ * !style_code(FITNESSE_OIDC_ENABLED=true)
+ * !style_code(FITNESSE_OIDC_ISSUER=...)
+ * !style_code(FITNESSE_OIDC_CLIENT_ID=...)
+ * !style_code(FITNESSE_OIDC_AUDIENCE=...) (optional)
+
+Azure Entra ID can be configured with:
+ * !style_code(FITNESSE_AZURE_TENANT_ID=...)
+ * !style_code(FITNESSE_AZURE_CLIENT_ID=...)
+ * !style_code(FITNESSE_AZURE_AUDIENCE=...) (optional)
 
 !3 !-Symbol Types-!
 ''required property:'' '''!-SymbolTypes-! = <class name>[,<class name]'''
@@ -162,6 +175,7 @@ Plugins classes can provide one or more of the following methods to register com
  * '''registerSlimTableFactories(!-SlimTableFactory-! slimTableFactory)''' - register Slim table factories using ''!-slimTableFactory.addTableType(String nameOrPrefix, Class<? extends SlimTable> tableClass)-!''
  * '''registerCustomComparatorRegistries(!-CustomComparatorRegistry-! customComparatorRegistry)''' - register custom comparators for checks done by the Slim test system using ''!-customComparatorRegistry.addCustomComparator(String prefix, CustomComparator customComparator)-!''
  * '''registerFormatters(!-FormatterRegistry-! formatterRegistry)''' - register custom formatters using ''!-formatterRegistry.registerFormatter(Class formatterClass)-!''
+ * '''registerVertxPlugins(!-VertxPluginRegistry-! registry)''' - register Vert.x routes/services for the modern runtime
 
 Plugins are instantiated by FitNesse's !-ComponentFactory-!. By doing so they can support either one of those constructors:
 
@@ -180,5 +194,8 @@ There are more properties which can be used to tweak parts of FitNesse:
  * '''TestHistory.purgeOptions''' - A comma separated list of the age, in number of days, to offer as purge options on the ''Test History'' page.
  * '''TestHistory.maxCount''' - The number of histories to keep around per page. Cleaned up after a new test run.
  * Any variable that can be defined on a wiki page.
+
+!3 Policy overrides (UI/API/MCP)
+The Vert.x server enforces a shared policy file at !style_code(.fitnesse/policy.json) with optional per-folder overrides. Local policies are applied by wiki folder (closest match wins), and deny rules block lower overrides unless ''allowOverride'' is set. See the VertxServer page for details.
 
 The Slim test system has a set of [[custom properties][<UserGuide.WritingAcceptanceTests.SliM]] that can either be set on a page or in the configuration file.

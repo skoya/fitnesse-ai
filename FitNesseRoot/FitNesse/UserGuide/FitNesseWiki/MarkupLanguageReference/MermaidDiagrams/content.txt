@@ -1,0 +1,19 @@
+Mermaid diagrams can be embedded directly in a page using a dedicated block.
+
+'''Markup Text'''
+{{{!mermaid
+graph TD
+  A[Start] --> B{Decision}
+  B -->|Yes| C[Do thing]
+  B -->|No| D[Skip]
+!endmermaid}}}
+
+'''Displays as:'''
+!mermaid
+graph TD
+  A[Start] --> B{Decision}
+  B -->|Yes| C[Do thing]
+  B -->|No| D[Skip]
+!endmermaid
+
+!note Mermaid rendering runs in the browser. The diagram text is rendered after the page loads.

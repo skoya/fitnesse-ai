@@ -33,3 +33,5 @@ The !-FitNesse-! markup language is straightforward to learn, and powerful eno
 | [[Last Modification Time][>LastModificationTime]] | ''Showing the time that a page was last modified.'' |
 | [[Today's Date][>TodaysDate]] | ''Showing todays date in various formats and styles.'' |
 | [[Nesting][>MarkupNesting]] | ''Nesting markup within other markup elements.'' |
+| [[PlantUML Diagrams][>PlantUmlDiagrams]] | ''Rendering inline PlantUML diagrams.'' |
+| [[Mermaid Diagrams][>MermaidDiagrams]] | ''Rendering inline Mermaid diagrams.'' |

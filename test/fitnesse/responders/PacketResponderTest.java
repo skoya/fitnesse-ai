@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static net.javacrumbs.jsonunit.JsonAssert.assertJsonEquals;
 
 import fitnesse.wiki.WikiPageUtil;
-import org.json.JSONObject;
+import io.vertx.core.json.JsonObject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -95,14 +95,14 @@ public class PacketResponderTest {
 
   @Test
   public void oneTableWithNestedPair() throws Exception {
-    JSONObject expected = new JSONObject("{\"tables\": [{\"n\": {\"m\": \"v\"}}]}");
-    assertPageWithTableResponseWith("|n|\n||m|v|\n", expected.toString(1));
+    JsonObject expected = new JsonObject("{\"tables\": [{\"n\": {\"m\": \"v\"}}]}");
+    assertPageWithTableResponseWith("|n|\n||m|v|\n", expected.encodePrettily());
   }
 
   @Test
   public void tableWithBlankLinesIgnored() throws Exception {
-    JSONObject expected = new JSONObject("{\"tables\": [{\"n\": {\"m\": \"v\"}}]}");
-    assertPageWithTableResponseWith("|n|\n||||\n||m|v|\n", expected.toString(1));
+    JsonObject expected = new JsonObject("{\"tables\": [{\"n\": {\"m\": \"v\"}}]}");
+    assertPageWithTableResponseWith("|n|\n||||\n||m|v|\n", expected.encodePrettily());
   }
 
   @Test
@@ -127,13 +127,13 @@ public class PacketResponderTest {
       " \"Justin\": {},\n" +
       " \"Micah\": {\"Luka\": \"5\"}\n" +
       "}}]}";
-    JSONObject expected = new JSONObject(expectedString);
-    assertPageWithTableResponseWith(table, expected.toString(1));
+    JsonObject expected = new JsonObject(expectedString);
+    assertPageWithTableResponseWith(table, expected.encodePrettily());
   }
 
   @Test
   public void jsonpQueryArgument() throws Exception {
     request.addInput("jsonp", "load");
-    assertPageWithTableResponseWith("|cell|\n", "load({\"tables\": [{\"cell\": {}}]})");
+    assertPageWithTableResponseWith("|cell|\n", "load({\"tables\":[{\"cell\":{}}]})");
   }
 }

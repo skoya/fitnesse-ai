@@ -1,0 +1,266 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>AI Workflow Builder</title>
+  <link rel="stylesheet" type="text/css" href="/files/fitnesse/css/fitnesse_pages.css" />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 16px; background: #f7f5f0; }
+    .panel { background: #fff; border: 1px solid #ddd; padding: 12px; margin-bottom: 12px; }
+    .layout { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+    .canvas { position: relative; height: 520px; border: 1px dashed #ccc; background: #fff; overflow: hidden; }
+    .node { position: absolute; width: 260px; border: 1px solid #ddd; background: #fbfaf7; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+    .node-header { background: #efe9df; padding: 6px; cursor: move; font-weight: bold; }
+    .node-body { padding: 8px; }
+    textarea { width: 100%; height: 70px; }
+    input, select { width: 100%; padding: 6px; margin: 4px 0; }
+    button { margin-right: 6px; }
+    pre { background: #f7f5f0; border: 1px solid #eee; padding: 8px; white-space: pre-wrap; }
+    .run-card { border: 1px solid #eee; padding: 8px; margin-bottom: 8px; background: #fdfcf8; }
+    .edge-panel select { margin-bottom: 6px; }
+    svg { position: absolute; top: 0; left: 0; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    const e = React.createElement;
+
+    function App() {
+      const [workflows, setWorkflows] = React.useState([]);
+      const [id, setId] = React.useState("example-flow");
+      const [name, setName] = React.useState("Example Flow");
+      const [nodes, setNodes] = React.useState([
+        { id: "node-1", prompt: "Summarize this page: {{prev}}", tool: "assist", role: "", reflection: false, reflectionPrompt: "", params: {}, expectedContains: "", x: 40, y: 40 }
+      ]);
+      const [edges, setEdges] = React.useState([]);
+      const [runResult, setRunResult] = React.useState(null);
+      const [runs, setRuns] = React.useState([]);
+      const [edgeFrom, setEdgeFrom] = React.useState("");
+      const [edgeTo, setEdgeTo] = React.useState("");
+      const [evalPrompt, setEvalPrompt] = React.useState("");
+      const [evalExpected, setEvalExpected] = React.useState("");
+      const [evalResult, setEvalResult] = React.useState(null);
+
+      const refreshWorkflows = () => {
+        fetch('/api/ai/workflows')
+          .then(r => r.json())
+          .then(j => setWorkflows(j.workflows || []));
+      };
+
+      const refreshRuns = (flowId) => {
+        if (!flowId) return;
+        fetch(`/api/ai/workflows/${flowId}/runs`)
+          .then(r => r.json())
+          .then(j => setRuns(j.runs || []));
+      };
+
+      React.useEffect(() => {
+        refreshWorkflows();
+      }, []);
+
+      const addNode = () => {
+        const next = {
+          id: `node-${nodes.length + 1}`,
+          prompt: "",
+          tool: "assist",
+          role: "",
+          reflection: false,
+          reflectionPrompt: "",
+          params: {},
+          expectedContains: "",
+          x: 60 + nodes.length * 20,
+          y: 60 + nodes.length * 20
+        };
+        setNodes([...nodes, next]);
+      };
+
+      const updateNode = (idx, field, value) => {
+        const copy = nodes.slice();
+        copy[idx] = Object.assign({}, copy[idx], { [field]: value });
+        setNodes(copy);
+      };
+
+      const addEdge = () => {
+        if (!edgeFrom || !edgeTo) return;
+        setEdges([...edges, { from: edgeFrom, to: edgeTo }]);
+        setEdgeFrom("");
+        setEdgeTo("");
+      };
+
+      const saveWorkflow = () => {
+        const payload = { id, name, nodes: nodes.map(n => ({
+          id: n.id,
+          prompt: n.prompt,
+          tool: n.tool,
+          role: n.role,
+          reflection: n.reflection,
+          reflectionPrompt: n.reflectionPrompt,
+          params: n.params,
+          expectedContains: n.expectedContains,
+          x: n.x,
+          y: n.y
+        })), edges };
+        fetch('/api/ai/workflows', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+          .then(r => r.json())
+          .then(() => refreshWorkflows());
+      };
+
+      const loadWorkflow = (flowId) => {
+        fetch(`/api/ai/workflows/${flowId}`)
+          .then(r => r.json())
+          .then(j => {
+            setId(j.id || flowId);
+            setName(j.name || flowId);
+            setNodes(j.nodes || []);
+            setEdges(j.edges || []);
+            refreshRuns(j.id || flowId);
+          });
+      };
+
+      const runWorkflow = () => {
+        const payload = { workflow: { id, name, nodes, edges } };
+        fetch('/api/ai/workflows/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+          .then(r => r.json())
+          .then(result => {
+            setRunResult(result);
+            refreshRuns(id);
+          });
+      };
+
+      const runEval = () => {
+        fetch('/api/ai/evals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: evalPrompt, expectedContains: evalExpected }) })
+          .then(r => r.json())
+          .then(setEvalResult);
+      };
+
+      const startDrag = (idx, ev) => {
+        ev.preventDefault();
+        const startX = ev.clientX;
+        const startY = ev.clientY;
+        const original = nodes[idx];
+        const move = (moveEv) => {
+          const dx = moveEv.clientX - startX;
+          const dy = moveEv.clientY - startY;
+          updateNode(idx, 'x', Math.max(0, original.x + dx));
+          updateNode(idx, 'y', Math.max(0, original.y + dy));
+        };
+        const stop = () => {
+          window.removeEventListener('mousemove', move);
+          window.removeEventListener('mouseup', stop);
+        };
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', stop);
+      };
+
+      const nodeCenter = (node) => ({ x: node.x + 130, y: node.y + 16 });
+
+      return e('div', null,
+        e('h1', null, 'AI Workflow Builder'),
+        e('div', { className: 'panel' },
+          e('div', null, 'Saved Workflows:'),
+          workflows.map(flow => e('button', { key: flow.id, onClick: () => loadWorkflow(flow.id) }, flow.name || flow.id))
+        ),
+        e('div', { className: 'layout' },
+          e('div', null,
+            e('div', { className: 'panel' },
+              e('label', null, 'Workflow Id'),
+              e('input', { value: id, onChange: ev => setId(ev.target.value) }),
+              e('label', null, 'Workflow Name'),
+              e('input', { value: name, onChange: ev => setName(ev.target.value) }),
+              e('button', { onClick: saveWorkflow }, 'Save'),
+              e('button', { onClick: runWorkflow }, 'Run Workflow')
+            ),
+            e('div', { className: 'panel edge-panel' },
+              e('h3', null, 'Edges'),
+              e('select', { value: edgeFrom, onChange: ev => setEdgeFrom(ev.target.value) },
+                e('option', { value: '' }, 'From...'),
+                nodes.map(n => e('option', { key: n.id, value: n.id }, n.id))
+              ),
+              e('select', { value: edgeTo, onChange: ev => setEdgeTo(ev.target.value) },
+                e('option', { value: '' }, 'To...'),
+                nodes.map(n => e('option', { key: n.id, value: n.id }, n.id))
+              ),
+              e('button', { onClick: addEdge }, 'Add Edge'),
+              edges.map((edge, idx) => e('div', { key: idx }, `${edge.from} -> ${edge.to}`))
+            ),
+            e('div', { className: 'panel' },
+              e('h3', null, 'Run History'),
+              runs.length === 0 ? e('div', null, 'No runs yet') : null,
+              runs.map((run, idx) => e('div', { className: 'run-card', key: idx },
+                e('div', null, `Result: ${run.passed ? 'PASS' : 'FAIL'}`),
+                run.nodes ? run.nodes.map(node =>
+                  e('pre', { key: node.id }, `${node.id} (${node.passed ? 'PASS' : 'FAIL'})\n${node.output}`)
+                ) : null
+              ))
+            ),
+            e('div', { className: 'panel' },
+              e('h3', null, 'Eval Runner'),
+              e('label', null, 'Prompt'),
+              e('textarea', { value: evalPrompt, onChange: ev => setEvalPrompt(ev.target.value) }),
+              e('label', null, 'Expected Contains'),
+              e('input', { value: evalExpected, onChange: ev => setEvalExpected(ev.target.value) }),
+              e('button', { onClick: runEval }, 'Run Eval'),
+              evalResult ? e('pre', null, `Result: ${evalResult.passed ? 'PASS' : 'FAIL'}\n${evalResult.details}`) : null
+            )
+          ),
+          e('div', null,
+            e('div', { className: 'panel' },
+              e('h3', null, 'Canvas'),
+              e('div', { className: 'canvas' },
+                e('svg', { width: '100%', height: '100%' },
+                  edges.map((edge, idx) => {
+                    const from = nodes.find(n => n.id === edge.from);
+                    const to = nodes.find(n => n.id === edge.to);
+                    if (!from || !to) return null;
+                    const a = nodeCenter(from);
+                    const b = nodeCenter(to);
+                    return e('line', { key: idx, x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: '#999', 'strokeWidth': 2 });
+                  })
+                ),
+                nodes.map((node, idx) => e('div', {
+                  className: 'node',
+                  key: node.id,
+                  style: { transform: `translate(${node.x}px, ${node.y}px)` }
+                },
+                  e('div', { className: 'node-header', onMouseDown: ev => startDrag(idx, ev) }, node.id),
+                  e('div', { className: 'node-body' },
+                    e('label', null, 'Role'),
+                    e('input', { value: node.role || '', onChange: ev => updateNode(idx, 'role', ev.target.value) }),
+                    e('label', null, 'Tool'),
+                    e('select', { value: node.tool, onChange: ev => updateNode(idx, 'tool', ev.target.value) },
+                      e('option', { value: 'assist' }, 'Assist'),
+                      e('option', { value: 'test-gen' }, 'Generate Test')
+                    ),
+                    e('label', null, 'Prompt'),
+                    e('textarea', { value: node.prompt, onChange: ev => updateNode(idx, 'prompt', ev.target.value) }),
+                    e('label', null, 'Expected Contains'),
+                    e('input', { value: node.expectedContains || '', onChange: ev => updateNode(idx, 'expectedContains', ev.target.value) }),
+                    e('label', null, 'Reflection'),
+                    e('select', { value: node.reflection ? 'yes' : 'no', onChange: ev => updateNode(idx, 'reflection', ev.target.value === 'yes') },
+                      e('option', { value: 'no' }, 'No'),
+                      e('option', { value: 'yes' }, 'Yes')
+                    ),
+                    node.reflection ? e('textarea', { value: node.reflectionPrompt || '', onChange: ev => updateNode(idx, 'reflectionPrompt', ev.target.value), placeholder: 'Reflection prompt (optional)' }) : null
+                  )
+                ))
+              )
+            ),
+            runResult && e('div', { className: 'panel' },
+              e('h3', null, `Run Result: ${runResult.passed ? 'PASS' : 'FAIL'}`),
+              runResult.nodes && runResult.nodes.map(node =>
+                e('pre', { key: node.id }, `${node.id} (${node.passed ? 'PASS' : 'FAIL'})\n${node.output}`)
+              )
+            )
+          )
+        ),
+        e('button', { onClick: addNode }, 'Add Node')
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('app')).render(e(App));
+  </script>
+</body>
+</html>

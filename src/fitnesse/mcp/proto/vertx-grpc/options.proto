@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package vertx.grpc;
+
+import "google/protobuf/descriptor.proto";
+
+// Minimal Vert.x gRPC service option to trigger Vert.x codegen.
+extend google.protobuf.ServiceOptions {
+  bool service = 53599;
+}

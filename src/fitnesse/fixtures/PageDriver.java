@@ -24,7 +24,7 @@ import org.htmlparser.filters.TagNameFilter;
 import org.htmlparser.lexer.Lexer;
 import org.htmlparser.lexer.Page;
 import org.htmlparser.util.NodeList;
-import org.json.JSONObject;
+import io.vertx.core.json.JsonObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -157,14 +157,14 @@ public class PageDriver {
 
   public boolean containsJsonPacket(String packet) throws Exception {
     packet = ResponseExaminer.convertBreaksToLineSeparators(packet);
-    JSONObject expected = new JSONObject(packet);
+    JsonObject expected = new JsonObject(packet);
     String contentString = requester.contents();
     int jsonStart = contentString.indexOf("{");
     if (jsonStart == -1)
       return false;
     contentString = contentString.substring(jsonStart);
-    JSONObject actual = new JSONObject(contentString);
-    return expected.toString(1).equals(actual.toString(1));
+    JsonObject actual = new JsonObject(contentString);
+    return expected.equals(actual);
   }
 
   public String content() throws Exception {

@@ -35,6 +35,8 @@ The interface looks like this:
   default void registerTestRunFactories(TestRunFactoryRegistry runFactoryRegistry) throws PluginException { }
 
   default void registerMarkupSystems(MarkUpSystems systems) {}
+
+  default void registerVertxPlugins(VertxPluginRegistry registry) throws PluginException { }
 }
 }}}
 The methods ''getAuthenticator()'' should return one instance. If multiple plugins provide an authenticator, the first authenticator found will be used. The setting can be overridden by explicitly defining an authenticator in the configuration file.
@@ -44,6 +46,15 @@ The same rules are applicable for ''getContentFilter()''.
 The ''registerXxx'' methods are invoked with the appropriate provider or registry. It is the responsibility of the plugin to register its plugins with those providers.
 
 >MarkupSystemPlugIns
+
+!2 Vert.x plugins (modern runtime)
+The Vert.x server loads plugins through the same !-PluginFeatureFactory-! interface. Implement ''registerVertxPlugins(VertxPluginRegistry registry)'' and register one or more Vert.x plugins (routes, adapters, or EventBus services).
+
+Guidance for modern plugins:
+ * Prefer Vert.x routes + EventBus handlers instead of new legacy responders.
+ * Keep blocking I/O off the event loop (use worker executors).
+ * Respect access policies from !style_code(.fitnesse/policy.json) and auth handlers (Basic or OIDC).
+ * For MCP or AI adapters, register them via the Vert.x plugin registry so they can be enabled/disabled without code changes.
 
 !2 Documentation
 Every plugin should provide documentation which should be placed in the .PlugIns folder. 

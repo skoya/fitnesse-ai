@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import util.FileUtil;
 import fitnesse.FitNesseContext;
 import fitnesse.authentication.AlwaysSecureOperation;
@@ -65,19 +65,19 @@ class DirectoryResponder implements SecureResponder {
   }
 
   private Response makeDirectoryListingJsonPage() throws UnsupportedEncodingException {
-    JSONArray listing = new JSONArray();
+    JsonArray listing = new JsonArray();
     for (FileInfo fileInfo : makeFileInfo(FileUtil.getDirectoryListing(requestedDirectory))) {
-      JSONObject fiObject = new JSONObject();
+      JsonObject fiObject = new JsonObject();
       fiObject.put("name", fileInfo.getName());
       fiObject.put("size", fileInfo.getSize());
       fiObject.put("date", fileInfo.getDate());
       fiObject.put("directory", fileInfo.isDirectory());
-      listing.put(fiObject);
+      listing.add(fiObject);
     }
 
     SimpleResponse simpleResponse = new SimpleResponse();
     simpleResponse.setContentType(Response.Format.JSON);
-    simpleResponse.setContent(listing.toString());
+    simpleResponse.setContent(listing.encode());
     return simpleResponse;
   }
 

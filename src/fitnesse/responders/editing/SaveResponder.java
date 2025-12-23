@@ -12,6 +12,8 @@ import fitnesse.http.Response;
 import fitnesse.http.SimpleResponse;
 import fitnesse.wiki.*;
 
+import java.nio.charset.StandardCharsets;
+
 import static fitnesse.responders.editing.SaveRecorder.changesShouldBeMerged;
 
 public class SaveResponder implements SecureResponder {
@@ -22,6 +24,10 @@ public class SaveResponder implements SecureResponder {
     long ticketId = getTicketId(request);
     String resource = request.getResource();
     WikiPage page = getPage(resource, context);
+    Response conflict = checkIfMatch(request, page);
+    if (conflict != null) {
+      return conflict;
+    }
 
     if (changesShouldBeMerged(editTimeStamp, ticketId, page))
       return new MergeResponder(request).makeResponse(context, request);
@@ -82,6 +88,34 @@ public class SaveResponder implements SecureResponder {
     data.setOrRemoveAttribute(PageData.PropertyHELP, helpText);
     data.setOrRemoveAttribute(PageData.PropertySUITES, suites);
     data.setOrRemoveAttribute(PageData.LAST_MODIFYING_USER, user);
+  }
+
+  private Response checkIfMatch(Request request, WikiPage page) {
+    String expected = request.getHeader("If-Match");
+    if (expected == null || expected.isEmpty()) {
+      expected = request.getInput("expectedVersion");
+    }
+    if (expected == null || expected.isEmpty()) {
+      return null;
+    }
+    String current = latestVersionName(page);
+    if (current == null || !current.equals(expected)) {
+      SimpleResponse response = new SimpleResponse(409);
+      response.addHeader("Current-Version", current == null ? "" : current);
+      response.setContent("Version conflict. Reload and retry.".getBytes(StandardCharsets.UTF_8));
+      return response;
+    }
+    return null;
+  }
+
+  private String latestVersionName(WikiPage page) {
+    VersionInfo latest = null;
+    for (VersionInfo version : page.getVersions()) {
+      if (latest == null || version.compareTo(latest) > 0) {
+        latest = version;
+      }
+    }
+    return latest == null ? null : latest.getName();
   }
 
   @Override

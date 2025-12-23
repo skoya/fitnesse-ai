@@ -284,3 +284,23 @@ table.diff_table tr td {border: 0px; padding: 0px 0px 0px 0px;}
   color: #CC5478;
   font-weight: bold;
 }
+
+.fitnesse-diagram {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 12px 0;
+  background: #fafafa;
+}
+
+.fitnesse-diagram pre {
+  margin: 0;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 13px;
+  white-space: pre;
+}
+
+.fitnesse-diagram .plantuml-image {
+  max-width: 100%;
+  height: auto;
+}

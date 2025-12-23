@@ -22,7 +22,7 @@ public class TimeRange extends TimeBasedFixtureDecorator {
   @Override
   protected void run(Fixture fixture, Parse table) {
     super.run(fixture, table);
-    summary.put(ACTUAL_TIME_TAKEN, new Long(elapsedTime));
+    summary.put(ACTUAL_TIME_TAKEN, Long.valueOf(elapsedTime));
   }
 
   @Override
@@ -31,9 +31,9 @@ public class TimeRange extends TimeBasedFixtureDecorator {
       throw new InvalidInputException("Time range must be specified");
     }
     minTime = Long.parseLong(arguments[0]);
-    summary.put(MIN_TIME, new Long(minTime));
+    summary.put(MIN_TIME, Long.valueOf(minTime));
     maxTime = Long.parseLong(arguments[1]);
-    summary.put(MAX_TIME, new Long(maxTime));
+    summary.put(MAX_TIME, Long.valueOf(maxTime));
   }
 
   @Override

@@ -1,0 +1,9 @@
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Courier New
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundCorner 6
+skinparam ArrowColor #555555
+skinparam LineColor #888888
+skinparam NoteBackgroundColor #FFF9E5
+skinparam NoteBorderColor #E1C47A

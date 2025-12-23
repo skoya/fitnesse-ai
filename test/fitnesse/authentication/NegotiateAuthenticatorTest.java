@@ -22,6 +22,9 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static util.RegexTestCase.assertSubString;
 
@@ -40,7 +43,7 @@ public class NegotiateAuthenticatorTest {
   public void credentialsShouldBeNullIfNoServiceName() throws Exception {
     NegotiateAuthenticator authenticator = new NegotiateAuthenticator(manager, properties);
     assertNull(authenticator.getServerCredentials());
-    verify(manager, never()).createName(anyString(), (Oid) anyObject(), (Oid) anyObject());
+    verify(manager, never()).createName(anyString(), (Oid) any(), (Oid) any());
   }
 
   @Test
@@ -50,8 +53,8 @@ public class NegotiateAuthenticatorTest {
     properties.setProperty("NegotiateAuthenticator.mechanism", "1.2");
     GSSName gssName = mock(GSSName.class);
     GSSCredential gssCredential = mock(GSSCredential.class);
-    when(manager.createName(anyString(), (Oid) anyObject(), (Oid) anyObject())).thenReturn(gssName);
-    when(manager.createCredential((GSSName) anyObject(), anyInt(), (Oid) anyObject(), anyInt())).thenReturn(gssCredential);
+    when(manager.createName(anyString(), (Oid) any(), (Oid) any())).thenReturn(gssName);
+    when(manager.createCredential((GSSName) any(), anyInt(), (Oid) any(), anyInt())).thenReturn(gssCredential);
     NegotiateAuthenticator authenticator = new NegotiateAuthenticator(manager, properties);
     Oid serviceNameType = authenticator.getServiceNameType();
     Oid mechanism = authenticator.getMechanism();
@@ -123,8 +126,8 @@ public class NegotiateAuthenticatorTest {
 
   private GSSContext makeMockGssContext(String userName, String password) throws GSSException {
     GSSContext gssContext = mock(GSSContext.class);
-    when(manager.createContext((GSSCredential) anyObject())).thenReturn(gssContext);
-    when(gssContext.acceptSecContext((byte[])anyObject(), anyInt(), anyInt())).thenReturn(password.getBytes());
+    when(manager.createContext((GSSCredential) any())).thenReturn(gssContext);
+    when(gssContext.acceptSecContext((byte[]) any(), anyInt(), anyInt())).thenReturn(password.getBytes());
     GSSName gssName = mock(GSSName.class);
     when(gssName.toString()).thenReturn(userName);
     when(gssContext.getSrcName()).thenReturn(gssName);

@@ -45,57 +45,7 @@ public class SlimClientBuilder extends ClientBuilder<SlimCommandRunningClient> {
   }
 
   protected CommandRunner determineCommandRunner() {
-    if (getSlimPort() == SLIM_USE_PIPE_PORT) {
-      // Wrap executionLogListener
-      return new CommandRunner(buildCommand(),
-        createClasspathEnvironment(getClassPath()),
-          getExecutionLogListener(), determineTimeout()) {
-
-        @Override
-        protected void redirectOutputs(Process process, final ExecutionLogListener executionLogListener) throws IOException {
-          InputStream stderr = process.getErrorStream();
-          new Thread(new OutputReadingRunnable(stderr, new OutputWriter() {
-            @Override
-            public void write(String output) {
-              // Separate StdOut and StdErr and remove prefix"
-              String originalMsg;
-              originalMsg = extractOriginalMessage(output, STDOUT_PREFIX);
-              if (originalMsg != null) {
-                executionLogListener.stdOut(originalMsg);
-              } else {
-                originalMsg = extractOriginalMessage(output, STDERR_PREFIX);
-                if (originalMsg != null) {
-                  executionLogListener.stdErr(originalMsg);
-                  setCommandErrorMessage(originalMsg);
-                } else {
-                  executionLogListener.stdOut(output);
-                }
-              }
-            }
-
-            /**
-             * This reverts the wrap that the LoggingOutputStream.flush method
-             * is doing.
-             *
-             * @param prefixedMessage
-             * @param level
-             * @return == null : the message is not prefixed with the given
-             *         level != null : the original message content
-             */
-            private String extractOriginalMessage(String prefixedMessage,
-                String level) {
-              if (prefixedMessage.startsWith(level))
-                return prefixedMessage.substring(level.length()
-                    + SlimPipeSocket.FOLLOWING_LINE_PREFIX.length());
-              return null;
-            }
-
-          }), "CommandRunner stdOutErr").start();
-
-        }
-      };
-
-    } else if (useManualStartForTestSystem()) {
+    if (useManualStartForTestSystem()) {
       return new MockCommandRunner(
           "Connection to running SlimService: " + determineSlimHost() + ":"
               + getSlimPort(), getExecutionLogListener(), determineTimeout());
@@ -226,7 +176,9 @@ public class SlimClientBuilder extends ClientBuilder<SlimCommandRunningClient> {
     } catch (NumberFormatException e) {
       // stick with default
     }
-    return SLIM_USE_PIPE_PORT;
+    // Default to an ephemeral TCP port instead of legacy pipe mode (1) to
+    // avoid brittle pipe-based failures on newer JVMs.
+    return 0;
   }
 
   private int getSlimPortPoolSize() {

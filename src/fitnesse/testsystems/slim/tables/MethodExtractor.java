@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public class MethodExtractor {
   private final String version = "1.0";
@@ -21,14 +21,14 @@ public class MethodExtractor {
     super();
     this.configurations = new ArrayList<>();
 
-    JSONObject jo = new JSONObject(configString);
+    JsonObject jo = new JsonObject(configString);
 
     String fV = jo.getString("FormatVersion");
     if (!version.equals(fV))
       throw new IllegalArgumentException("JSON Mesage has version '" + fV + "'. This class expects version '" + version + "'.");
-    JSONArray configList = jo.getJSONArray("MethodExtractorRules");
-    for (int i = 0; i < configList.length(); i++) {
-      JSONObject config = configList.getJSONObject(i);
+    JsonArray configList = jo.getJsonArray("MethodExtractorRules");
+    for (int i = 0; i < configList.size(); i++) {
+      JsonObject config = configList.getJsonObject(i);
       String scopePattern = config.getString("Scope");
       String methodName = config.getString("TargetName");
       String parameterNames = config.getString("Parameters");

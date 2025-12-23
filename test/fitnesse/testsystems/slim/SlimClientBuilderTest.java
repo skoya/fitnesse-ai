@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -22,7 +23,9 @@ public class SlimClientBuilderTest {
     when(descriptor.getVariable("SLIM_PORT")).thenReturn(null);
     for (int i = 0; i < 15; i++) {
       SlimClientBuilder clientBuilder = new SlimClientBuilder(descriptor);
-      assertEquals(1, clientBuilder.getSlimPort());
+      int port = clientBuilder.getSlimPort();
+      assertTrue(port > 0);
+      assertTrue(port != SlimClientBuilder.SLIM_USE_PIPE_PORT);
     }
   }
 
@@ -51,7 +54,11 @@ public class SlimClientBuilderTest {
     Descriptor descriptor = mock(Descriptor.class);
     when(descriptor.getVariable("SLIM_PORT")).thenReturn("BOB");
     for (int i = 0; i < 15; i++)
-      assertEquals(1, new SlimClientBuilder(descriptor).getSlimPort());
+      {
+        int port = new SlimClientBuilder(descriptor).getSlimPort();
+        assertTrue(port > 0);
+        assertTrue(port != SlimClientBuilder.SLIM_USE_PIPE_PORT);
+      }
   }
 
   @Test

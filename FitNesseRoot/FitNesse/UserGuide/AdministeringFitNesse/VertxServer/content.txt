@@ -1,0 +1,42 @@
+!1 Vert.x server runtime
+The Vert.x runtime replaces the legacy servlet stack with async routing, EventBus wiring, and optional MCP adapters (HTTP, WebSocket, gRPC).
+
+!2 Starting the server
+ * Use !style_code(./quickrun.sh) for a local dev start (reads env defaults).
+ * Or run !style_code(fitnesse.vertx.FitNesseVertxMain) directly: !style_code(java -cp build/classes/java/main:build/resources/main:lib/* fitnesse.vertx.FitNesseVertxMain)
+ * The server redirects !style_code(/) to !style_code(/wiki/FrontPage) and serves static assets under !style_code(/files/*).
+
+!2 Key environment settings
+|!meta name|!meta default|!meta description|
+|FITNESSE_VERTX_PORT|8080|HTTP port for Vert.x|
+|FITNESSE_ROOT_PATH|.|Root folder containing !-FitNesseRoot-!|
+|FITNESSE_ROOT_DIR|FitNesseRoot|Wiki root directory name|
+|FITNESSE_AUTH_ENABLED|false|Enable authentication for UI/API/MCP (Basic auth for MCP); set to true in shared environments|
+|FITNESSE_MCP_WS_ENABLED|false|Enable the !-/mcp/ws-! WebSocket adapter|
+|FITNESSE_MCP_GRPC_ENABLED|false|Enable the gRPC adapter (proto in !-src/fitnesse/mcp/proto-!)|
+|FITNESSE_MCP_GRPC_PORT|50051|Port for the gRPC adapter when enabled|
+|FITNESSE_AI_PROVIDER|echo|AI provider selection (echo/openai)|
+|OPENAI_API_KEY|-(unset)-|API key for OpenAI provider|
+|OPENAI_MODEL|gpt-4.1|Model name for OpenAI provider|
+|FITNESSE_HTTP_TIMEOUT_MS|30000|Per-request timeout applied via Vert.x !-TimeoutHandler-!|
+|FITNESSE_IDLE_TIMEOUT_SEC|60|HTTP idle timeout for server connections|
+|FITNESSE_TEST_POOL_SIZE|auto (>=cores)|Worker pool size for Slim/Fit runs (defaults to max(2, available processors))|
+|FITNESSE_TEST_MAX_QUEUE|auto (pool*4)|Max queued test runs before 429 backpressure; defaults to 4x pool size|
+|prevent.system.exit|false|Recommended on modern JDKs to avoid SecurityManager interference with Slim SUT|
+|java.security.manager|allow|Set to allow to prevent SecurityManager install errors on modern JDKs|
+|SLIM_PORT|8099|Port hint for Slim runner when using quickrun.sh (can be overridden)|
+
+!2 Plugin loading (Vert.x)
+Plugins are loaded from !style_code(plugins.properties) and Java !-ServiceLoader-! providers. Vert.x plugins can register routes and adapters (MCP, AI, auth, etc.) via the Vert.x plugin registry so they can be enabled/disabled without code changes.
+
+!2 Static files and roots
+ * Static handler serves !style_code(/files/fitnesse/*) from !style_code(fitnesse/resources) and !style_code(/files/*) from the wiki !-files-! directory.
+ * Keep !style_code(FITNESSE_ROOT_PATH) pointing to the folder that contains !-FitNesseRoot-! (avoid absolute !style_code(/) roots in handler configuration).
+
+!2 Auth and audit
+ * When !style_code(FITNESSE_AUTH_ENABLED=true), routes are protected by the shared policy rules and an auth handler (Basic or OIDC).
+ * OIDC is enabled with !style_code(FITNESSE_OIDC_ENABLED=true) and issuer/client settings, or Azure Entra settings.
+ * MCP adapters accept OIDC bearer tokens or Basic auth and log to !style_code(.fitnesse/audit/mcp-audit.jsonl).
+
+!2 Policy file
+Policies are defined in !style_code(.fitnesse/policy.json) with optional overrides under nested folders. The closest folder policy wins, and deny rules block lower overrides unless ''allowOverride'' is true.

@@ -90,7 +90,7 @@ public class SimpleInteractionTest {
 
   @Test
   public void canCreateAndUseATestObject() throws Throwable {
-    Integer expectedInt = new Integer(7);
+    Integer expectedInt = Integer.valueOf(7);
     SimpleInteraction interaction = new SimpleInteraction();
 
     Testee o = (Testee) interaction.newInstance(cstr, new Object[]{1});
@@ -105,7 +105,7 @@ public class SimpleInteractionTest {
     MockingInteraction interaction = new MockingInteraction();
 
     Testee testee = (Testee) interaction.newInstance(cstr, (Object[]) null);
-    interaction.methodInvoke(setI, testee, new Integer(3));
+    interaction.methodInvoke(setI, testee, Integer.valueOf(3));
     String gotI = (String) interaction.methodInvoke(getI, testee);
 
     String expectedMockingOnlyString = "----mockingOnly----";
@@ -132,7 +132,7 @@ public class SimpleInteractionTest {
   public void findMatchingMethodWithCorrectCapitalization() {
     SimpleInteraction interaction = new SimpleInteraction();
 
-    Method setI = interaction.findMatchingMethod("setIntVal", new Testee(), new Integer(1));
+    Method setI = interaction.findMatchingMethod("setIntVal", new Testee(), Integer.valueOf(1));
     assertThat(setI, is(notNullValue()));
   }
 
@@ -140,7 +140,7 @@ public class SimpleInteractionTest {
   public void findMatchingMethodWithIncorrectCapitalizationShouldReturnCorrectMethod() {
     SimpleInteraction interaction = new SimpleInteraction();
 
-    Method setI = interaction.findMatchingMethod("SetIntVal", new Testee(), new Integer(1));
+    Method setI = interaction.findMatchingMethod("SetIntVal", new Testee(), Integer.valueOf(1));
     assertThat(setI, is(notNullValue()));
   }
 }

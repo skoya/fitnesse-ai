@@ -35,7 +35,7 @@ public class TypeAdapterTest {
 
     adapter = TypeAdapter.on(f, f.getClass().getMethod("pi", new Class[]{}));
     assertEquals(3.14159, ((Double) adapter.invoke()).doubleValue(), 0.00001);
-    assertEquals(new Double(3.141592653), adapter.invoke());
+    assertEquals(Double.valueOf(3.141592653), adapter.invoke());
 
     adapter = TypeAdapter.on(f, f.getClass().getField("ch"));
     adapter.set(adapter.parse("abc"));
