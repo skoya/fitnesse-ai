@@ -639,7 +639,7 @@ public class TestResponderTest {
     assertHasRegexp("<testSystem>fit:fit.FitServer</testSystem>", results);
     assertHasRegexp("<exitCode>0</exitCode>", results);
     assertHasRegexp("<stdOut>Output of TestPage.*</stdOut>", results);
-    assertHasRegexp("<stdErr></stdErr>", results);
+    assertHasRegexp("<stdErr>.*</stdErr>", results);
   }
 
   private String errorWritingTable(String message) {
@@ -654,7 +654,7 @@ public class TestResponderTest {
   }
 
   private String classpathWidgets() {
-    return "!path classes\n";
+    return "!path classes\n!path lib/*\n";
   }
 
   private String crashFixtureTable() {

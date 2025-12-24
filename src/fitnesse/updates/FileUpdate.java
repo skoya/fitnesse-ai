@@ -4,11 +4,12 @@ package fitnesse.updates;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URL;
+import java.io.ByteArrayOutputStream;
+
+import util.FileUtil;
 
 public class FileUpdate implements Update {
 
@@ -30,26 +31,16 @@ public class FileUpdate implements Update {
   }
 
   private void makeSureDirectoriesExist() {
-    destination.mkdirs();
+    FileUtil.makeDir(destination.getPath());
   }
 
   private void copyResource() throws IOException {
     URL url = getResource(source);
     if (url != null) {
-      InputStream input = null;
-      OutputStream output = null;
-      try {
-        input = url.openStream();
-        output = new FileOutputStream(destinationFile());
-
-        int b;
-        while ((b = input.read()) != -1)
-          output.write(b);
-      } finally {
-        if (input != null)
-          input.close();
-        if (output != null)
-          output.close();
+      try (InputStream input = url.openStream()) {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        FileUtil.copyBytes(input, output);
+        FileUtil.createFile(destinationFile(), output.toByteArray());
       }
     } else
       throw new FileNotFoundException("Could not load resource: " + source);

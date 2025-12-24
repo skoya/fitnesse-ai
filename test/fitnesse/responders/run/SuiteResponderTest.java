@@ -246,6 +246,7 @@ public class SuiteResponderTest {
 
   private String classpathWidgets() {
     return "!path classes\n" +
+      "!path lib/*\n" +
       "!path lib/dummy.jar\n";
   }
 

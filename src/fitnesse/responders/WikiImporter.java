@@ -4,7 +4,13 @@ package fitnesse.responders;
 
 import fitnesse.components.TraversalListener;
 import fitnesse.http.RequestBuilder;
-import fitnesse.http.ResponseParser;
+import fitnesse.util.VertxWorkerPool;
+import fitnesse.vertx.VertxFutures;
+import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import fitnesse.util.XmlUtil;
 import fitnesse.wiki.NoPruningStrategy;
 import fitnesse.wiki.PageData;
@@ -25,6 +31,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class WikiImporter implements XmlizerPageHandler, TraversalListener<WikiPage> {
   private String remoteUsername;
@@ -45,6 +53,12 @@ public class WikiImporter implements XmlizerPageHandler, TraversalListener<WikiP
   private WikiPagePath contextPath;
   private boolean autoUpdateSetting = true;
   private Exception caughtException;
+  private static final int DEFAULT_CONNECT_TIMEOUT_MS = 5000;
+  private static final int DEFAULT_IDLE_TIMEOUT_SECONDS = 10;
+  private static final int DEFAULT_REQUEST_TIMEOUT_MS = 30000;
+  private static final WebClientOptions WEB_CLIENT_OPTIONS = new WebClientOptions()
+    .setConnectTimeout(DEFAULT_CONNECT_TIMEOUT_MS)
+    .setIdleTimeout(DEFAULT_IDLE_TIMEOUT_SECONDS);
 
   public WikiImporter() {
     importerClient = new NullWikiImporterClient();
@@ -202,15 +216,14 @@ public class WikiImporter implements XmlizerPageHandler, TraversalListener<WikiP
     builder.setHostAndPort(remoteHostname, remotePort);
     if (remoteUsername != null)
       builder.addCredentials(remoteUsername, remotePassword);
+    HttpResponse<Buffer> response = performRequest(builder);
 
-    ResponseParser parser = ResponseParser.performHttpRequest(remoteHostname, remotePort, builder);
-
-    if (parser.getStatus() == 404)
+    if (response.statusCode() == 404)
       throw new IOException("The remote resource, " + remoteUrl() + ", was not found.");
-    if (parser.getStatus() == 401)
+    if (response.statusCode() == 401)
       throw new AuthenticationRequiredException(remoteUrl());
 
-    String body = parser.getBody();
+    String body = response.bodyAsString();
     return XmlUtil.newDocument(body);
   }
 
@@ -350,6 +363,29 @@ public class WikiImporter implements XmlizerPageHandler, TraversalListener<WikiP
 
     public WikiImporterException(String message, Throwable t) {
       super(message, t);
+    }
+  }
+
+  private HttpResponse<Buffer> performRequest(RequestBuilder builder) throws IOException {
+    Vertx vertx = VertxWorkerPool.vertx();
+    WebClient client = WebClient.create(vertx, WEB_CLIENT_OPTIONS);
+    String resource = builder.getResource();
+    String query = builder.inputString();
+    if (builder.isGetMethod() && !query.isEmpty()) {
+      resource = resource.contains("?") ? resource + "&" + query : resource + "?" + query;
+    }
+    io.vertx.ext.web.client.HttpRequest<Buffer> request =
+      client.request(io.vertx.core.http.HttpMethod.valueOf(builder.getMethod()), remotePort, remoteHostname, resource)
+        .timeout(DEFAULT_REQUEST_TIMEOUT_MS);
+    for (Map.Entry<String, String> header : builder.getHeaders().entrySet()) {
+      request.putHeader(header.getKey(), header.getValue());
+    }
+    try {
+      return VertxFutures.await(request.send(), DEFAULT_REQUEST_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+    } catch (Exception e) {
+      throw new IOException("Remote wiki request failed", e);
+    } finally {
+      client.close();
     }
   }
 

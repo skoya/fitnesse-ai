@@ -3,7 +3,8 @@ package util;
 import java.io.File;
 
 public final class GradleSupport {
-    public static final String CLASSES_DIR = "build/classes/java/main";
+    public static final String CLASSES_DIR = "build/classes/java/main" + File.pathSeparator
+        + "lib" + File.separator + "*";
     public static final String TEST_CLASSES_DIR = "build/classes/java/test";
 
     public static String javaCommand() {

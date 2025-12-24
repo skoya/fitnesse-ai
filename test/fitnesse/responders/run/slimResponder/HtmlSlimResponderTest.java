@@ -55,7 +55,7 @@ public class HtmlSlimResponderTest {
     // Enforce the test runner here, to make sure we're talking to the right
     // system
     testPage = WikiPageUtil.addPage(context.getRootPage(), PathParser.parse("TestPage"),
-            "!define TEST_RUNNER {fitnesse.slim.SlimService}\n!path classes");
+            "!define TEST_RUNNER {fitnesse.slim.SlimService}\n!path classes\n!path lib/*");
     SlimClientBuilder.clearSlimPortOffset();
   }
 
@@ -324,7 +324,7 @@ public class HtmlSlimResponderTest {
 
   @Test
   public void checkTestClassPrecededByDefine() throws Exception {
-    getResultsForPageContents("!define PI {3.141592}\n" + "!path classes\n"
+    getResultsForPageContents("!define PI {3.141592}\n" + "!path classes\n!path lib/*\n"
         + "!path fitnesse.jar\n" + "|fitnesse.testutil.PassFixture|\n");
     assertTestResultsContain("PassFixture");
   }

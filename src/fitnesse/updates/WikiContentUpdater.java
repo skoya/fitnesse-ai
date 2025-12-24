@@ -7,11 +7,10 @@ import fitnesse.Updater;
 import util.FileUtil;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -53,13 +52,9 @@ public class WikiContentUpdater implements Updater {
     Properties properties = new Properties();
     File propFile = getPropertiesFile();
     if (propFile.exists()) {
-      InputStream is = null;
-      try {
-        is = new FileInputStream(propFile);
+      byte[] bytes = FileUtil.getFileBytes(propFile);
+      try (InputStream is = new ByteArrayInputStream(bytes)) {
         properties.load(is);
-      } finally {
-        if (is != null)
-          is.close();
       }
     }
     return properties;
@@ -70,18 +65,15 @@ public class WikiContentUpdater implements Updater {
   }
 
   void saveProperties() throws IOException {
-    OutputStream os = null;
     File propFile = getPropertiesFile();
     try {
-      os = new FileOutputStream(propFile);
+      ByteArrayOutputStream os = new ByteArrayOutputStream();
       rootProperties.store(os, "#FitNesse properties");
+      FileUtil.createFile(propFile, os.toByteArray());
     } catch (IOException e) {
       String fileName = propFile.getAbsolutePath();
       LOG.log(Level.SEVERE, "Failed to save properties file: \"" + fileName + "\". (exception: " + e + ")");
       throw e;
-    } finally {
-      if (os != null)
-        os.close();
     }
   }
 

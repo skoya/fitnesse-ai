@@ -588,7 +588,7 @@ Design: one core MCP service, multiple adapters.
 - [x] Replace `Timer`/`ScheduledExecutorService` usage with Vert.x timers and periodic schedules.
 - [x] Replace raw `Thread`/`ThreadPoolExecutor` usage with Vert.x worker pools and `Context` propagation.
 - [x] Replace `Socket`/`ServerSocket` usage with Vert.x NetClient/NetServer (if any remain).
-- [ ] Replace `WatchService` file watchers with Vert.x fileSystem watch or scheduled scans (configurable).
+- [x] Replace `WatchService` file watchers with Vert.x fileSystem watch or scheduled scans (configurable).
 - [x] Replace ad-hoc JSON parsing (Jackson/Gson direct usage) with Vert.x `JsonObject`/`JsonArray` where appropriate.
 - [x] Replace direct `CompletableFuture` chains in request paths with Vert.x `Future`/`Promise` for uniform error handling.
 #### Concrete targets (from scan)
@@ -596,11 +596,11 @@ Design: one core MCP service, multiple adapters.
 - [ ] Replace `fitnesse.http.ResponseParser` socket usage with Vert.x WebClient (timeouts + failure handling).
 - [ ] Replace `fitnesse.http.RequestBuilder`/`Request` IO buffering with Vert.x `Buffer` and `HttpServerRequest` handling.
 - [ ] Replace `fitnesse.slim.SlimStreamReader` socket IO with Vert.x NetClient (worker offload where blocking).
-- [ ] Replace file utilities (`util.FileUtil`, `fitnesse.components.ContentBuffer`, update helpers) with Vert.x FileSystem + worker executor where needed.
+- [x] Replace file utilities (`util.FileUtil`, `fitnesse.components.ContentBuffer`, update helpers) with Vert.x FileSystem + worker executor where needed.
 - [ ] Replace `fitnesse.responders.ShutdownResponder` thread usage with Vert.x timer/executeBlocking shutdown flow.
-- [ ] Replace `fitnesse.responders.WikiImporter*` direct HTTP/IO with Vert.x WebClient + Buffer.
+- [x] Replace `fitnesse.responders.WikiImporter*` direct HTTP/IO with Vert.x WebClient + Buffer.
 - [ ] Replace `fitnesse.responders.RssResponder` host lookup/network calls with Vert.x DNS/client APIs (or cached async lookup).
-- [ ] Replace `fitnesse.components.PluginsClassLoaderFactory` URLClassLoader path handling with Vert.x FileSystem where IO is required (keep URLClassLoader only for class loading).
+- [x] Replace `fitnesse.components.PluginsClassLoaderFactory` URLClassLoader path handling with Vert.x FileSystem where IO is required (keep URLClassLoader only for class loading).
 
 ### Feature enhancements (proposed)
 - [x] Native inline PlantUML + Mermaid rendering (replace outdated PlantUML plugin; secure server-side rendering + cached assets).

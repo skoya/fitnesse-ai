@@ -8,6 +8,7 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
+import util.FileUtil;
 
 /**
  * Gets a class loader which extends the class path with jars found in "plugins" directory.
@@ -29,11 +30,9 @@ public class PluginsClassLoaderFactory {
 
   private static List<String> pluginJars(File pluginsDirectory) throws IOException {
     List<String> result = new ArrayList<>();
-    if (pluginsDirectory.exists() && pluginsDirectory.isDirectory()) {
-      for (File plugin : pluginsDirectory.listFiles()) {
-        if (plugin.getName().endsWith("jar")) {
-          result.add(plugin.getCanonicalPath());
-        }
+    for (File plugin : FileUtil.listFiles(pluginsDirectory)) {
+      if (plugin.getName().endsWith("jar")) {
+        result.add(plugin.getCanonicalPath());
       }
     }
     return result;

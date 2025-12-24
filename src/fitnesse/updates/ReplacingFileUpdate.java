@@ -3,10 +3,11 @@
 package fitnesse.updates;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+
+import util.FileUtil;
 
 public class ReplacingFileUpdate extends FileUpdate {
   public ReplacingFileUpdate(String source, File destination) {
@@ -15,8 +16,9 @@ public class ReplacingFileUpdate extends FileUpdate {
 
   @Override
   public void doUpdate() throws IOException {
-    if (destinationFile().exists())
-      destinationFile().delete();
+    if (destinationFile().exists()) {
+      FileUtil.deleteFile(destinationFile());
+    }
     super.doUpdate();
   }
 
@@ -28,7 +30,7 @@ public class ReplacingFileUpdate extends FileUpdate {
       URL resource = getResource(source);
       if (resource != null) {
         long sourceSum = checkSum(resource.openStream());
-        long destinationSum = checkSum(new FileInputStream(destinationFile()));
+        long destinationSum = checkSum(FileUtil.getFileBytes(destinationFile()));
 
         return sourceSum != destinationSum;
       } else
@@ -46,6 +48,13 @@ public class ReplacingFileUpdate extends FileUpdate {
     } finally {
       input.close();
     }
+  }
 
+  private long checkSum(byte[] bytes) {
+    long sum = 0;
+    for (byte b : bytes) {
+      sum += b;
+    }
+    return sum;
   }
 }

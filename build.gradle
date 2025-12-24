@@ -45,21 +45,14 @@ repositories {
   mavenCentral()
 }
 
-configurations {
-  compile {
-    transitive = false
-  }
-  runtime {
-    transitive = false
-  }
-}
+
 
 sourceSets {
   main {
     java.srcDir 'src'
     resources.srcDir 'src'
     proto.srcDir 'src/fitnesse/mcp/proto'
-    output.resourcesDir java.classesDirectory
+    output.resourcesDir = java.classesDirectory
   }
   test {
     java.srcDir 'test'
@@ -267,7 +260,7 @@ task copyRuntimeLibs(type: Copy) {
 
 test {
   dependsOn copyRuntimeLibs
-  maxParallelForks 1
+  maxParallelForks = 1
   jvmArgs "-Djava.security.manager=allow"
   // Force Slim to use ephemeral TCP ports instead of legacy pipe (1) to avoid startup failures on newer JVMs.
   systemProperty "slim.port", "0"
@@ -411,8 +404,8 @@ publishing {
       artifact javadocJar
       artifact standaloneJar
       artifact slimJar
-      groupId 'org.fitnesse'
-      artifactId 'fitnesse'
+      groupId = 'org.fitnesse'
+      artifactId = 'fitnesse'
       pom.withXml {
         asNode().get('version') + {
           resolveStrategy = Closure.DELEGATE_FIRST

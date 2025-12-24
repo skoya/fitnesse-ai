@@ -54,7 +54,8 @@ public class SslSlimClientBuilderTest {
         "!define slim.pool.size {1}\n" +
         "!define wiki.protocol.ssl.parameter.class {"+ clientParameters + "}\n"
     );
-    WikiPageDescriptor descriptor = new WikiPageDescriptor(testPage, false, false, GradleSupport.TEST_CLASSES_DIR, "classes");
+    WikiPageDescriptor descriptor = new WikiPageDescriptor(testPage, false, false,
+      GradleSupport.TEST_CLASSES_DIR, "classes", "lib" + java.io.File.separator + "*");
     descriptor.getExecutionLogListener().addExecutionLogListener(new ConsoleExecutionLogListener());
     SlimClientBuilder clientBuilder = new SlimClientBuilder(descriptor);
     String testSystemName = clientBuilder.getTestSystemName();
@@ -76,5 +77,4 @@ public class SslSlimClientBuilderTest {
     assertTrue("Got connected to client", isConnected);
   }
 }
-
 

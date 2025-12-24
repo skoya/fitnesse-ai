@@ -65,6 +65,6 @@ public class ExposeThreadingIssueInMockResponseTest {
   }
 
   private String classpathWidgets() {
-    return "!path classes\n";
+    return "!path classes\n!path lib/*\n";
   }
 }
