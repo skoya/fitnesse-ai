@@ -92,13 +92,17 @@ public class SuiteHistoryFormatter extends BaseFormatter implements ExecutionLog
 
   @Override
   public void testAssertionVerified(Assertion assertion, TestResult testResult) {
-    testHistoryFormatter.testAssertionVerified(assertion, testResult);
+    if (testHistoryFormatter != null) {
+      testHistoryFormatter.testAssertionVerified(assertion, testResult);
+    }
     super.testAssertionVerified(assertion, testResult);
   }
 
   @Override
   public void testExceptionOccurred(Assertion assertion, ExceptionResult exceptionResult) {
-    testHistoryFormatter.testExceptionOccurred(assertion, exceptionResult);
+    if (testHistoryFormatter != null) {
+      testHistoryFormatter.testExceptionOccurred(assertion, exceptionResult);
+    }
     super.testExceptionOccurred(assertion, exceptionResult);
   }
 

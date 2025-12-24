@@ -1,19 +1,51 @@
 /* Tailwind-inspired base theme for FitNesse. */
 :root {
   --tw-bg: #f8fafc;
-  --tw-bg-accent: #f1f5f9;
+  --tw-bg-accent: #e2e8f0;
   --tw-panel: #ffffff;
+  --tw-surface: #ffffff;
+  --tw-surface-muted: #f1f5f9;
   --tw-ink: #0f172a;
   --tw-muted: #64748b;
-  --tw-accent: #0f766e;
-  --tw-accent-strong: #115e59;
+  --tw-accent: #14b8a6;
+  --tw-accent-strong: #0f766e;
+  --tw-accent-soft: rgba(20, 184, 166, 0.12);
   --tw-border: #e2e8f0;
-  --tw-ring: rgba(15, 118, 110, 0.25);
+  --tw-ring: rgba(20, 184, 166, 0.35);
   --tw-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+  --tw-shadow-soft: 0 10px 24px rgba(15, 23, 42, 0.08);
   --tw-radius: 20px;
+  --tw-tag-bg: rgba(20, 184, 166, 0.12);
+  --tw-tag-border: rgba(20, 184, 166, 0.35);
+  --tw-nav-bg: rgba(255, 255, 255, 0.9);
+  --tw-glow-teal: rgba(20, 184, 166, 0.18);
+  --tw-glow-blue: rgba(56, 189, 248, 0.18);
   --tw-body-font: "Sora", "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
   --tw-display-font: "Fraunces", "Palatino Linotype", "Book Antiqua", Palatino, serif;
   --tw-mono-font: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+body[data-color-mode="dark"] {
+  --tw-bg: #0b1120;
+  --tw-bg-accent: #0f172a;
+  --tw-panel: #111827;
+  --tw-surface: #0f172a;
+  --tw-surface-muted: #1e293b;
+  --tw-ink: #e2e8f0;
+  --tw-muted: #94a3b8;
+  --tw-accent: #2dd4bf;
+  --tw-accent-strong: #14b8a6;
+  --tw-accent-soft: rgba(45, 212, 191, 0.18);
+  --tw-border: #1f2937;
+  --tw-ring: rgba(45, 212, 191, 0.4);
+  --tw-shadow: 0 20px 50px rgba(2, 6, 23, 0.6);
+  --tw-shadow-soft: 0 16px 32px rgba(2, 6, 23, 0.6);
+  --tw-tag-bg: rgba(45, 212, 191, 0.16);
+  --tw-tag-border: rgba(45, 212, 191, 0.4);
+  --tw-nav-bg: rgba(15, 23, 42, 0.9);
+  --tw-glow-teal: rgba(45, 212, 191, 0.2);
+  --tw-glow-blue: rgba(59, 130, 246, 0.2);
+  color-scheme: dark;
 }
 
 * {
@@ -25,9 +57,10 @@ body {
   padding: 24px 24px 120px;
   font-family: var(--tw-body-font);
   color: var(--tw-ink);
+  color-scheme: light;
   background:
-    radial-gradient(1200px 650px at 10% -10%, rgba(15, 118, 110, 0.12), transparent 55%),
-    radial-gradient(900px 600px at 95% 5%, rgba(59, 130, 246, 0.12), transparent 60%),
+    radial-gradient(1200px 650px at 10% -10%, var(--tw-glow-teal), transparent 55%),
+    radial-gradient(900px 600px at 95% 5%, var(--tw-glow-blue), transparent 60%),
     linear-gradient(180deg, var(--tw-bg-accent), var(--tw-bg));
   min-height: 100vh;
   animation: tw-fade-in 0.45s ease-out both;
@@ -92,7 +125,7 @@ header ul li a {
   padding: 4px 10px;
   border-radius: 999px;
   border: 1px solid var(--tw-border);
-  background: #fff;
+  background: var(--tw-surface);
   color: var(--tw-muted);
   font-size: 0.85rem;
   text-decoration: none;
@@ -128,8 +161,8 @@ header h1 {
   gap: 6px;
   padding: 2px 12px;
   border-radius: 999px;
-  border: 1px solid rgba(15, 118, 110, 0.25);
-  background: rgba(15, 118, 110, 0.1);
+  border: 1px solid var(--tw-tag-border);
+  background: var(--tw-tag-bg);
   color: var(--tw-accent-strong);
   font-size: 0.78rem;
   font-weight: 600;
@@ -150,8 +183,22 @@ header h1 {
   padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid var(--tw-border);
-  background: #fff;
+  background: var(--tw-surface);
   font-family: var(--tw-body-font);
+}
+
+.theme-switcher .mode-toggle {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--tw-border);
+  background: var(--tw-surface-muted);
+  color: var(--tw-ink);
+  font-weight: 600;
+}
+
+.theme-switcher .mode-toggle:hover {
+  background: var(--tw-accent-soft);
+  color: var(--tw-accent-strong);
 }
 
 .theme-switcher .user-badge {
@@ -161,7 +208,7 @@ header h1 {
   padding: 4px 10px;
   border-radius: 999px;
   border: 1px solid var(--tw-border);
-  background: rgba(15, 118, 110, 0.08);
+  background: var(--tw-tag-bg);
   color: var(--tw-accent-strong);
   font-size: 0.8rem;
   font-weight: 600;
@@ -180,9 +227,9 @@ nav {
   padding: 8px 12px;
   border-radius: 999px;
   border: 1px solid var(--tw-border);
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--tw-nav-bg);
   backdrop-filter: blur(8px);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--tw-shadow-soft);
 }
 
 nav ul {
@@ -214,7 +261,7 @@ nav a:visited {
 }
 
 nav a:hover {
-  background: rgba(15, 118, 110, 0.12);
+  background: var(--tw-accent-soft);
   color: var(--tw-accent-strong);
 }
 
@@ -226,8 +273,8 @@ nav .dropdown-menu {
   min-width: 200px;
   border-radius: 14px;
   border: 1px solid var(--tw-border);
-  background: #fff;
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16);
+  background: var(--tw-surface);
+  box-shadow: var(--tw-shadow);
   display: none;
   z-index: 100;
 }
@@ -275,7 +322,7 @@ a:hover {
 table {
   border-collapse: collapse;
   width: 100%;
-  background: #fff;
+  background: var(--tw-surface);
   border: 1px solid var(--tw-border);
   border-radius: 12px;
   overflow: hidden;
@@ -289,7 +336,7 @@ td {
 }
 
 th {
-  background: #f1f5f9;
+  background: var(--tw-surface-muted);
   font-weight: 600;
 }
 
@@ -302,7 +349,7 @@ tt {
 pre {
   padding: 14px 16px;
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--tw-surface-muted);
   border: 1px solid var(--tw-border);
   overflow-x: auto;
 }
@@ -317,6 +364,8 @@ select {
   border-radius: 12px;
   padding: 8px 10px;
   font-family: var(--tw-body-font);
+  background: var(--tw-surface);
+  color: var(--tw-ink);
 }
 
 input:focus,
@@ -325,7 +374,7 @@ textarea:focus,
 button:focus {
   outline: none;
   box-shadow: 0 0 0 3px var(--tw-ring);
-  border-color: rgba(15, 118, 110, 0.35);
+  border-color: var(--tw-accent);
 }
 
 button,

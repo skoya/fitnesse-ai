@@ -31,7 +31,7 @@
   <script src="${contextRoot}files/fitnesse/javascript/diagram-renderer.js" type="text/javascript"></script>
   <script src="${contextRoot}files/fitnesse/javascript/theme-switcher.js" type="text/javascript"></script>
  </head>
-<body#if( $bodyClass ) class="$bodyClass"#end data-theme="$theme">
+<body#if( $bodyClass ) class="$bodyClass"#end data-theme="$theme" data-color-mode="light">
 
   <header>
    #parse( $headerTemplate )

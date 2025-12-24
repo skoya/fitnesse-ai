@@ -34,6 +34,42 @@ Theme=fitnesse_mint
 !2 Switching themes in the UI
 FitNesse.ai includes a theme switcher in the page header. Select a theme from the drop-down to apply it immediately. Your selection is stored in a browser cookie named !-fitnesse_theme-! and overrides the server default for that browser.
 
+''UX update'': Tailwind themes now offer a light/dark toggle next to the Theme selector. It starts from your OS preference, then remembers your choice per browser so long sessions stay readable.
+
+!2 Light and dark mode
+The Tailwind themes support both light and dark palettes. Click the ''Dark'' / ''Light'' toggle in the header to switch. The selection is stored in browser local storage under !-fitnesse_color_mode-!.
+
+For custom themes, target the data attribute on the body:
+
+{{{
+body[data-color-mode="dark"] {
+  /* dark overrides */
+}
+}}}
+
+!mermaid
+flowchart LR
+  A[Visit page] --> B{Saved color mode?}
+  B -- yes --> C[Apply saved mode]
+  B -- no --> D{OS prefers dark?}
+  D -- yes --> E[Use dark]
+  D -- no --> F[Use light]
+!endmermaid
+
+!plantuml
+@startuml
+actor User
+participant "Browser" as Browser
+participant "FitNesse" as App
+User -> App: Load page
+App -> Browser: Read fitnesse_color_mode
+Browser --> App: Mode or empty
+App -> App: Apply data-color-mode
+User -> App: Toggle mode
+App -> Browser: Store fitnesse_color_mode
+@enduml
+!endplantuml
+
 Apart from the layout style, fitnesse loads a few stylesheets by default: ''fitnesse_pages.css'' and ''fitnesse_wiki.css''. Both files serve the boilerplate for pages (like the properties page) and the wiki text.
 
 !mermaid

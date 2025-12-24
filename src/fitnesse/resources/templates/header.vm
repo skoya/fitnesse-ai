@@ -15,6 +15,9 @@
   <option value="fitnesse_straight">Straight</option>
   <option value="fitnesse_topnav">Topnav</option>
  </select>
+ #if($theme == "fitnesse_tailwind" || $theme == "fitnesse_tailwind_slate")
+  <button id="color-mode-toggle" class="mode-toggle" type="button" aria-pressed="false">Dark</button>
+ #end
  #if($request.authorizationUsername)
   <span class="user-badge">User: <a href="$request.resource?account">$request.authorizationUsername</a></span>
  #end
