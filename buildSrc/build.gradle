@@ -6,7 +6,7 @@ repositories {
   mavenCentral()
 }
 
-def groovyVersion = '4.0.22'
+def groovyVersion = '5.0.3'
 
 dependencies {
   implementation gradleApi()
