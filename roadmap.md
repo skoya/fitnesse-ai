@@ -599,7 +599,7 @@ Design: one core MCP service, multiple adapters.
 - [x] Replace file utilities (`util.FileUtil`, `fitnesse.components.ContentBuffer`, update helpers) with Vert.x FileSystem + worker executor where needed.
 - [ ] Replace `fitnesse.responders.ShutdownResponder` thread usage with Vert.x timer/executeBlocking shutdown flow.
 - [x] Replace `fitnesse.responders.WikiImporter*` direct HTTP/IO with Vert.x WebClient + Buffer.
-- [ ] Replace `fitnesse.responders.RssResponder` host lookup/network calls with Vert.x DNS/client APIs (or cached async lookup).
+- [x] Replace `fitnesse.responders.RssResponder` host lookup/network calls with Vert.x DNS/client APIs (or cached async lookup).
 - [x] Replace `fitnesse.components.PluginsClassLoaderFactory` URLClassLoader path handling with Vert.x FileSystem where IO is required (keep URLClassLoader only for class loading).
 
 ### Feature enhancements (proposed)

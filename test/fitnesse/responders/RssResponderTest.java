@@ -47,7 +47,7 @@ public class RssResponderTest extends ResponderTestCase {
     date = dateFormat.format(Clock.currentDate());
     SimpleDateFormat rfcDateFormat = new SimpleDateFormat(FitNesseContext.rfcCompliantDateFormat);
     rfcDate = rfcDateFormat.format(Clock.currentDate());
-    hostName = java.net.InetAddress.getLocalHost().getHostName();
+    hostName = RssResponder.LinkPrefixBuilder.resolveLocalHostName();
   }
 
   @Test

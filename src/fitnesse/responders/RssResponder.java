@@ -2,13 +2,14 @@
 // Released under the terms of the CPL Common Public License version 1.0.
 package fitnesse.responders;
 
-import java.net.UnknownHostException;
+import java.io.IOException;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,10 +17,13 @@ import fitnesse.FitNesseContext;
 import fitnesse.authentication.SecureOperation;
 import fitnesse.authentication.SecureReadOperation;
 import fitnesse.authentication.SecureResponder;
+import fitnesse.util.VertxWorkerPool;
+import fitnesse.vertx.VertxFutures;
 import fitnesse.wiki.*;
 import fitnesse.http.Request;
 import fitnesse.http.Response;
 import fitnesse.http.SimpleResponse;
+import io.vertx.core.Vertx;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import fitnesse.util.XmlUtil;
@@ -203,6 +207,9 @@ public class RssResponder implements SecureResponder {
 
   static class LinkPrefixBuilder {
     private String preconfiguredPrefix;
+    private static final String DEFAULT_HOSTNAME = "localhost";
+    private static final long DNS_TIMEOUT_MS = 2000L;
+    private static volatile String cachedHostName;
 
     LinkPrefixBuilder(String preconfiguredPrefix) {
       this.preconfiguredPrefix = preconfiguredPrefix;
@@ -216,13 +223,33 @@ public class RssResponder implements SecureResponder {
       XmlUtil.addTextNode(itemElement, "link", link);
     }
 
-    private static String hostnameRssLinkPrefix() throws UnknownHostException {
-      String hostName = java.net.InetAddress.getLocalHost().getHostName();
+    private static String hostnameRssLinkPrefix() throws IOException {
+      String hostName = cachedHostName;
+      if (hostName == null || hostName.isEmpty()) {
+        hostName = resolveLocalHostName();
+        cachedHostName = hostName;
+      }
       return "http://" + hostName + "/";
     }
 
     private String getRssLinkPrefix() throws Exception {
       return preconfiguredPrefix == null ? hostnameRssLinkPrefix() : preconfiguredPrefix;
+    }
+
+    static String resolveLocalHostName() {
+      Vertx vertx = VertxWorkerPool.vertx();
+      try {
+        String resolved = VertxFutures.await(
+          vertx.createDnsClient().reverseLookup("127.0.0.1"),
+          DNS_TIMEOUT_MS,
+          TimeUnit.MILLISECONDS);
+        if (resolved == null || resolved.isEmpty()) {
+          return DEFAULT_HOSTNAME;
+        }
+        return resolved;
+      } catch (Exception e) {
+        return DEFAULT_HOSTNAME;
+      }
     }
   }
 }
