@@ -16,6 +16,12 @@ $!headerContent.render()
 ## Filled with stop/output buttons
 </div>
 
+<div id="run-status" class="run-status" style="display:none;">
+  <span class="label">Running:</span><span id="run-status-current">-</span>
+  <span class="label" style="margin-left:12px;">Queue:</span><span id="run-status-queue">0</span>
+  <span class="label" style="margin-left:12px;">Completed:</span><span id="run-status-completed">0</span>
+</div>
+
 #if ($multipleTestsRun)
 <div id="test-summaries">
     <h2>Test Summaries</h2>
@@ -27,6 +33,63 @@ $!headerContent.render()
 
 ## Test results are placed here:
 $testExecutor.execute()
+
+<script type="text/javascript">
+  (function () {
+    var statusEl = document.getElementById("run-status");
+    var currentEl = document.getElementById("run-status-current");
+    var queueEl = document.getElementById("run-status-queue");
+    var completedEl = document.getElementById("run-status-completed");
+    if (!statusEl || !currentEl || !queueEl || !completedEl) {
+      return;
+    }
+
+    var lastLogId = 0;
+    var currentTest = "-";
+
+    function updateStatus() {
+      fetch("/api/run/monitor")
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          queueEl.textContent = String(data.queued || 0);
+          completedEl.textContent = String(data.completed || 0);
+          statusEl.style.display = "block";
+        })
+        .catch(function () {});
+    }
+
+    function updateCurrentTest(entry) {
+      if (!entry || !entry.message) {
+        return;
+      }
+      if (entry.message.indexOf("Test started") === 0 && entry.resource) {
+        currentTest = entry.resource;
+        currentEl.textContent = currentTest;
+      }
+      if (entry.message.indexOf("Test complete") === 0 && entry.resource === currentTest) {
+        currentEl.textContent = "-";
+        currentTest = "-";
+      }
+    }
+
+    function refreshLogs() {
+      fetch("/api/run/logs?since=" + lastLogId + "&limit=200")
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.entries && data.entries.length) {
+            data.entries.forEach(updateCurrentTest);
+            lastLogId = data.nextId || lastLogId;
+          }
+        })
+        .catch(function () {});
+    }
+
+    updateStatus();
+    refreshLogs();
+    setInterval(updateStatus, 2000);
+    setInterval(refreshLogs, 2000);
+  })();
+</script>
 
 ##Keyboard shortcuts
 #parse("keyboardShortcuts.vm")

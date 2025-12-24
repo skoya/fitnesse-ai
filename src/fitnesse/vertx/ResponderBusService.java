@@ -30,6 +30,7 @@ final class ResponderBusService {
   static final String HEADER_CONTEXT_ROOT = "contextRoot";
   static final String HEADER_HEADERS = "headers";
   static final String HEADER_PARAMS = "params";
+  static final String HEADER_QUERY = "query";
   static final String HEADER_BODY = "body";
   static final String HEADER_UPLOADS = "uploads";
 
@@ -110,6 +111,7 @@ final class ResponderBusService {
     payload.put(HEADER_CONTEXT_ROOT, context.contextRoot);
     payload.put(HEADER_HEADERS, multimapToJson(routingContext.request().headers()));
     payload.put(HEADER_PARAMS, multimapToJson(routingContext.request().params()));
+    payload.put(HEADER_QUERY, routingContext.request().query());
     String body = routingContext.body() == null ? null : routingContext.body().asString();
     payload.put(HEADER_BODY, body);
 
@@ -172,6 +174,10 @@ final class ResponderBusService {
     MockRequest request = new MockRequest(resource);
     request.addInput(Request.NOCHUNK, "true");
     request.setContextRoot(payload.getString(HEADER_CONTEXT_ROOT, context.contextRoot));
+    String queryString = payload.getString(HEADER_QUERY, "");
+    if (queryString != null && !queryString.isEmpty()) {
+      request.setQueryString(queryString);
+    }
 
     JsonObject headers = payload.getJsonObject(HEADER_HEADERS, new JsonObject());
     for (String name : headers.fieldNames()) {

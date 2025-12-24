@@ -104,7 +104,11 @@ public class HtmlPage {
         return null;
       }
     }
-    return theme;
+    return isAllowedTheme(theme) ? theme : null;
+  }
+
+  private boolean isAllowedTheme(String theme) {
+    return "fitnesse_tailwind".equals(theme) || "fitnesse_tailwind_slate".equals(theme);
   }
 
 

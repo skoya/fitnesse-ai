@@ -111,4 +111,40 @@ public class SslParameters {
 	    return ssf;
 	}
 
+  public VertxSslConfig toVertxSslConfig() {
+    prepareGlobalConfiguration();
+    try {
+      String keyStore = System.getProperty("javax.net.ssl.keyStore");
+      String keyStorePassword = System.getProperty("javax.net.ssl.keyStorePassword");
+      String trustStore = System.getProperty("javax.net.ssl.trustStore");
+      return new VertxSslConfig(keyStore, keyStorePassword, trustStore);
+    } finally {
+      restorePreviousConfiguration();
+    }
+  }
+
+  public static final class VertxSslConfig {
+    private final String keyStorePath;
+    private final String keyStorePassword;
+    private final String trustStorePath;
+
+    VertxSslConfig(String keyStorePath, String keyStorePassword, String trustStorePath) {
+      this.keyStorePath = keyStorePath;
+      this.keyStorePassword = keyStorePassword;
+      this.trustStorePath = trustStorePath;
+    }
+
+    public String keyStorePath() {
+      return keyStorePath;
+    }
+
+    public String keyStorePassword() {
+      return keyStorePassword;
+    }
+
+    public String trustStorePath() {
+      return trustStorePath;
+    }
+  }
+
 }

@@ -14,6 +14,7 @@ import fit.Counts;
 import fit.FitProtocol;
 import fitnesse.testsystems.TestSummary;
 import util.StreamReader;
+import fitnesse.util.VertxWorkerPool;
 
 public class FitClient implements SocketAccepter {
   private static final Logger LOG = Logger.getLogger(FitClient.class.getName());
@@ -27,7 +28,7 @@ public class FitClient implements SocketAccepter {
   private volatile int received = 0;
   private volatile boolean isDoneSending = false;
   private volatile boolean killed = false;
-  private Thread fitListeningThread;
+  private java.util.concurrent.CompletableFuture<Void> fitListeningTask;
 
   public FitClient() {
     this.listeners = new LinkedList<>();
@@ -45,8 +46,8 @@ public class FitClient implements SocketAccepter {
     FitProtocol.writeData("", fitInput);
     fitOutput = new StreamReader(fitSocket.getInputStream());
 
-    fitListeningThread = new Thread(new FitListeningRunnable(), "FitClient fitOutput");
-    fitListeningThread.start();
+    fitListeningTask = VertxWorkerPool.runDedicated("fitnesse-fitclient-" + System.identityHashCode(this),
+      new FitListeningRunnable());
   }
 
   public void send(String data) throws IOException, InterruptedException {
@@ -62,19 +63,30 @@ public class FitClient implements SocketAccepter {
   }
 
   public void join() {
-    if (fitListeningThread != null)
+    if (fitListeningTask != null) {
       try {
-        fitListeningThread.join();
+        fitListeningTask.get();
       } catch (InterruptedException e) {
-        LOG.log(Level.FINE, "Wait for join of listening thread interrupted");
+        LOG.log(Level.FINE, "Wait for join of listening task interrupted");
         Thread.currentThread().interrupt();
+      } catch (Exception e) {
+        LOG.log(Level.FINE, "FitClient listening task failed", e);
       }
+    }
   }
 
   public void kill() {
     killed = true;
-    if (fitListeningThread != null)
-      fitListeningThread.interrupt();
+    if (fitSocket != null && !fitSocket.isClosed()) {
+      try {
+        fitSocket.close();
+      } catch (IOException e) {
+        LOG.log(Level.FINE, "Unable to close FitClient socket", e);
+      }
+    }
+    if (fitListeningTask != null) {
+      fitListeningTask.cancel(true);
+    }
   }
 
   public synchronized boolean isSuccessfullyStarted() {

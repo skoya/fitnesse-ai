@@ -23,6 +23,8 @@ import fitnesse.search.SearchResult;
 import fitnesse.search.SearchService;
 import fitnesse.util.ClassUtils;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.file.FileSystem;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
@@ -100,7 +102,7 @@ public final class FitNesseVertxMain {
     EventBus bus = vertx.eventBus();
     ResponderBusService busService = new ResponderBusService(vertx, context);
     runMonitor.setOnUpdate(snapshot -> bus.publish("fitnesse.run.monitor", snapshot));
-    busService.register(bus, "fitnesse.page.view", new WikiPageResponder());
+    busService.register(bus, "fitnesse.page.view", new ResponderFactoryResponder());
     busService.register(bus, "fitnesse.page.edit", new EditResponder());
     busService.register(bus, "fitnesse.page.save", new SaveResponder());
     busService.register(bus, "fitnesse.page.attachments", new UploadResponder());
@@ -570,7 +572,9 @@ public final class FitNesseVertxMain {
         ctx.next();
         return;
       }
-      ctx.response().setStatusCode(302).putHeader("Location", "/wiki/" + legacyPage).end();
+      String query = ctx.request().query();
+      String target = "/wiki/" + legacyPage + (query == null || query.isEmpty() ? "" : "?" + query);
+      ctx.response().setStatusCode(302).putHeader("Location", target).end();
     });
 
     // Auth is now enforced via the policy handler; explicit per-path auth not needed.
@@ -615,15 +619,28 @@ public final class FitNesseVertxMain {
         <html>
         <head>
           <title>Run Monitor</title>
+          <link rel="stylesheet" type="text/css" href="/files/fitnesse/css/fitnesse_tailwind.css" />
+          <link rel="stylesheet" type="text/css" href="/files/fitnesse/css/fitnesse_pages.css" />
           <style>
-            body{font-family:sans-serif;margin:1.5rem;background:#f7f5f0;}
-            .metric{font-size:1.1rem;}
-            .bar{height:12px;background:#eaeaea;border-radius:6px;overflow:hidden;}
-            .bar span{display:block;height:12px;background:#3b82f6;}
-            .panel{margin-top:1.5rem;padding:1rem;background:#fff;border:1px solid #e0ddd4;border-radius:8px;}
-            .logs{height:320px;overflow:auto;background:#0b0d10;color:#e6edf3;padding:12px;border-radius:6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;white-space:pre-wrap;}
-            .tag{display:inline-block;padding:2px 6px;border-radius:4px;background:#efe9df;margin-left:6px;font-size:12px;}
+            body.run-monitor{padding:24px;max-width:1100px;margin:0 auto;color:var(--tw-ink);}
+            .metric{font-size:1.05rem;margin:6px 0;}
+            .bar{height:12px;background:var(--tw-surface-muted);border-radius:999px;overflow:hidden;border:1px solid var(--tw-border);}
+            .bar span{display:block;height:12px;background:var(--tw-accent);}
+            .panel{margin-top:1.25rem;padding:1rem;background:var(--tw-panel);border:1px solid var(--tw-border);border-radius:14px;box-shadow:var(--tw-shadow-soft);}
+            .logs{height:320px;overflow:auto;background:var(--tw-surface);color:var(--tw-ink);padding:12px;border-radius:10px;border:1px solid var(--tw-border);font-family:var(--tw-mono-font);font-size:12px;white-space:pre-wrap;}
+            .tag{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--tw-tag-bg);border:1px solid var(--tw-tag-border);margin-left:6px;font-size:12px;}
           </style>
+          <script>
+            (function() {
+              try {
+                var mode = localStorage.getItem('fitnesse_color_mode');
+                if (mode) {
+                  document.documentElement.setAttribute('data-color-mode', mode);
+                  document.body && document.body.setAttribute('data-color-mode', mode);
+                }
+              } catch (e) {}
+            })();
+          </script>
           <script>
             let lastLogId = 0;
             function fmt(entry) {
@@ -661,7 +678,7 @@ public final class FitNesseVertxMain {
             window.onload = () => { refresh(); refreshLogs(); };
           </script>
         </head>
-        <body>
+        <body class="run-monitor">
           <h2>Run Monitor</h2>
           <div class='metric'>Queued: <span id='queued'>%d</span></div>
           <div class='metric'>Running: <span id='running'>%d</span></div>
@@ -823,12 +840,13 @@ public final class FitNesseVertxMain {
       return;
     }
     vertx.executeBlocking(() -> {
-      writeTestArtifacts(context, resource, payload, response);
+      writeTestArtifacts(vertx.fileSystem(), context, resource, payload, response);
       return null;
     }, false).onFailure(err -> LOG.log(Level.WARNING, "Failed to write test artifacts for " + resource, err));
   }
 
-  private static void writeTestArtifacts(FitNesseContext context,
+  private static void writeTestArtifacts(FileSystem fs,
+                                         FitNesseContext context,
                                          String resource,
                                          io.vertx.core.json.JsonObject payload,
                                          io.vertx.core.json.JsonObject response) throws Exception {
@@ -839,18 +857,19 @@ public final class FitNesseVertxMain {
       resource,
       "artifacts",
       timestamp);
-    java.nio.file.Files.createDirectories(artifactDir);
+    fs.mkdirsBlocking(artifactDir.toString());
 
     io.vertx.core.json.JsonObject params =
       payload.getJsonObject(ResponderBusService.HEADER_PARAMS, new io.vertx.core.json.JsonObject());
     if (paramHasValue(params, "format", "junit")) {
       byte[] body = java.util.Base64.getDecoder().decode(response.getString("bodyBase64", ""));
-      java.nio.file.Files.write(artifactDir.resolve("junit.xml"), body);
+      fs.writeFileBlocking(artifactDir.resolve("junit.xml").toString(), Buffer.buffer(body));
     }
 
     String html = renderLatestHistoryHtml(context, resource);
     if (html != null) {
-      java.nio.file.Files.writeString(artifactDir.resolve("report.html"), html, java.nio.charset.StandardCharsets.UTF_8);
+      fs.writeFileBlocking(artifactDir.resolve("report.html").toString(),
+        Buffer.buffer(html, java.nio.charset.StandardCharsets.UTF_8.name()));
     }
   }
 
@@ -1146,7 +1165,11 @@ public final class FitNesseVertxMain {
         return null;
       }
     }
-    return theme;
+    return isAllowedTheme(theme) ? theme : null;
+  }
+
+  private static boolean isAllowedTheme(String theme) {
+    return "fitnesse_tailwind".equals(theme) || "fitnesse_tailwind_slate".equals(theme);
   }
 
   private static boolean isReservedPath(String path) {

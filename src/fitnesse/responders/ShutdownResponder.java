@@ -14,6 +14,7 @@ import fitnesse.html.template.PageTitle;
 import fitnesse.http.Request;
 import fitnesse.http.Response;
 import fitnesse.http.SimpleResponse;
+import fitnesse.util.VertxWorkerPool;
 
 public class ShutdownResponder implements SecureResponder {
   private static final Logger LOG = Logger.getLogger(ShutdownResponder.class.getName());
@@ -29,18 +30,14 @@ public class ShutdownResponder implements SecureResponder {
     html.setMainTemplate("shutdownPage.vm");
     response.setContent(html.html(request));
 
-    Thread shutdownThread = new Thread() {
-      @Override
-      public void run() {
-        try {
-          context.fitNesse.stop();
-        }
-        catch (Exception e) {
-          LOG.log(Level.WARNING, "Error while stopping FitNesse", e);
-        }
+    VertxWorkerPool.run(() -> {
+      try {
+        context.fitNesse.stop();
       }
-    };
-    shutdownThread.start();
+      catch (Exception e) {
+        LOG.log(Level.WARNING, "Error while stopping FitNesse", e);
+      }
+    });
 
     return response;
   }

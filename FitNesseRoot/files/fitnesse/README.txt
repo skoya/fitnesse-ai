@@ -8,7 +8,7 @@ theme). Both the render engine (Velocity) and the FileResponder check
 files/fitnesse and the fitnesse.resources package when looking for a particular
 file.
 
-Say you want to add a custom theme called "custom". What do you do?
+FitNesse ships with Tailwind-based themes (fitnesse_tailwind and fitnesse_tailwind_slate). If you want to add a custom theme called "custom", do the following:
 
  1. Create FitNesseRoot/files/fitnesse/css/custom.css for styling
  2. Create FitNesseRoot/files/fitnesse/javascript/custom.js for behaviour

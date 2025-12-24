@@ -7,9 +7,7 @@ import fitnesse.FitNesseContext;
 import fitnesse.Updater;
 import fitnesse.components.PluginsClassLoaderFactory;
 import fitnesse.reporting.ExitCodeListener;
-import fitnesse.socketservice.PlainServerSocketFactory;
 import fitnesse.socketservice.SslParameters;
-import fitnesse.socketservice.SslServerSocketFactory;
 import fitnesse.updates.WikiContentUpdater;
 import fitnesse.wiki.PathParser;
 import fitnesse.vertx.FitNesseVertxMain;
@@ -18,10 +16,12 @@ import fitnesse.vertx.RunMonitorLogListener;
 import fitnesse.vertx.VertxConfig;
 import fitnesse.vertx.VertxConfigLoader;
 import io.vertx.core.Vertx;
+import io.vertx.core.net.JksOptions;
+import io.vertx.core.net.NetServerOptions;
+import io.vertx.core.http.ClientAuth;
 
 import java.io.*;
 import java.net.BindException;
-import java.net.ServerSocket;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -166,8 +166,8 @@ public class FitNesseMain {
           } else {
             LOG.info("Starting legacy FitNesse on port: " + context.port);
           }
-          ServerSocket serverSocket = createServerSocket(context, classLoader);
-          context.fitNesse.start(serverSocket);
+          NetServerOptions options = createLegacyNetServerOptions(context, classLoader);
+          context.fitNesse.startNetServer(options, context.port);
         }
       }
     }
@@ -186,21 +186,31 @@ public class FitNesseMain {
     return null;
   }
 
-  private ServerSocket createServerSocket(FitNesseContext context, ClassLoader classLoader) throws IOException {
+  private NetServerOptions createLegacyNetServerOptions(FitNesseContext context, ClassLoader classLoader) {
     String protocol = context.getProperty(FitNesseContext.WIKI_PROTOCOL_PROPERTY);
     boolean useHTTPS = (protocol != null && protocol.equalsIgnoreCase("https"));
     String clientAuth = context.getProperty(FitNesseContext.SSL_CLIENT_AUTH_PROPERTY);
     final boolean sslClientAuth = (clientAuth != null && clientAuth.equalsIgnoreCase("required"));
     final String sslParameterClassName = context.getProperty(FitNesseContext.SSL_PARAMETER_CLASS_PROPERTY);
+    NetServerOptions options = new NetServerOptions();
     if ("true".equalsIgnoreCase(context.getProperty(LOCALHOST_ONLY.getKey()))) {
-      return (useHTTPS
-        ? new SslServerSocketFactory(sslClientAuth, SslParameters.createSslParameters(sslParameterClassName, classLoader))
-        : new PlainServerSocketFactory()).createLocalOnlyServerSocket(context.port);
-    } else {
-      return (useHTTPS
-        ? new SslServerSocketFactory(sslClientAuth, SslParameters.createSslParameters(sslParameterClassName, classLoader))
-        : new PlainServerSocketFactory()).createServerSocket(context.port);
+      options.setHost("127.0.0.1");
     }
+    if (useHTTPS) {
+      SslParameters sslParameters = SslParameters.createSslParameters(sslParameterClassName, classLoader);
+      SslParameters.VertxSslConfig cfg = sslParameters.toVertxSslConfig();
+      options.setSsl(true);
+      if (cfg.keyStorePath() != null && cfg.keyStorePassword() != null) {
+        options.setKeyCertOptions(new JksOptions().setPath(cfg.keyStorePath()).setPassword(cfg.keyStorePassword()));
+      }
+      if (cfg.trustStorePath() != null && cfg.keyStorePassword() != null) {
+        options.setTrustOptions(new JksOptions().setPath(cfg.trustStorePath()).setPassword(cfg.keyStorePassword()));
+      }
+      if (sslClientAuth) {
+        options.setClientAuth(ClientAuth.REQUIRED);
+      }
+    }
+    return options;
   }
 
   private void executeSingleCommand(FitNesse fitNesse, String command, String outputFile) throws Exception {

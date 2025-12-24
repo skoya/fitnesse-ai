@@ -4,10 +4,11 @@ import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.file.FileSystem;
 import io.vertx.core.json.JsonObject;
 
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +26,7 @@ public final class VertxConfigLoader {
   }
 
   public static VertxConfig load(Vertx vertx, VertxConfig fallback) {
-    writeDefaultsIfMissing(fallback);
+    writeDefaultsIfMissing(vertx, fallback);
     ConfigStoreOptions fileStore = new ConfigStoreOptions()
       .setType("file")
       .setOptional(true)
@@ -39,11 +40,7 @@ public final class VertxConfigLoader {
 
     JsonObject loaded = new JsonObject();
     try {
-      JsonObject cfg = ConfigRetriever.create(vertx, options)
-        .getConfig()
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get(2, TimeUnit.SECONDS);
+      JsonObject cfg = VertxFutures.await(ConfigRetriever.create(vertx, options).getConfig(), 2, TimeUnit.SECONDS);
       if (cfg != null) {
         loaded = cfg;
       }
@@ -53,13 +50,15 @@ public final class VertxConfigLoader {
     return VertxConfig.fromJson(loaded, fallback);
   }
 
-  private static void writeDefaultsIfMissing(VertxConfig fallback) {
+  private static void writeDefaultsIfMissing(Vertx vertx, VertxConfig fallback) {
     Path path = Paths.get("vertx-config.json");
-    if (Files.exists(path)) {
+    FileSystem fs = vertx.fileSystem();
+    if (fs.existsBlocking(path.toString())) {
       return;
     }
     try {
-      Files.writeString(path, fallback.toJson().encodePrettily(), StandardCharsets.UTF_8);
+      Buffer buffer = Buffer.buffer(fallback.toJson().encodePrettily(), StandardCharsets.UTF_8.name());
+      fs.writeFileBlocking(path.toString(), buffer);
     } catch (Exception ignored) {
       // If we can't write the file, just continue with defaults.
     }

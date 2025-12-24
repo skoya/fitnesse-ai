@@ -7,6 +7,9 @@ The modern runtime focuses on async routing (Vert.x), external integrations (MCP
 |MCP adapters (HTTP/WS/gRPC)|[[MCP Adapters][<AdministeringFitNesse.McpAdapters>]]|HTTP on, WS/gRPC off|Set !style_code(FITNESSE_MCP_WS_ENABLED=true) or !style_code(FITNESSE_MCP_GRPC_ENABLED=true)|
 |AI assistant endpoints|[[Vertx Server][<AdministeringFitNesse.VertxServer>]]|echo provider|Set !style_code(FITNESSE_AI_PROVIDER=openai) and !style_code(OPENAI_API_KEY)|
 
+!2 UI styling
+The run monitor page (!style_code(/run-monitor)) and agent workflow UI (!style_code(/agent)) reuse the Tailwind theme CSS and respect the dark/light mode selection stored in !-fitnesse_color_mode-!.
+
 !2 Enablement flow
 !mermaid
 flowchart LR

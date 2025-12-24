@@ -10,11 +10,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.util.Arrays.asList;
 import static util.FileUtil.CHARENCODING;
+import fitnesse.util.VertxWorkerPool;
 
 
 public class CommandRunner {
@@ -27,6 +30,8 @@ public class CommandRunner {
   private final int timeout;
   private final ExecutionLogListener executionLogListener;
   private String commandErrorMessage = "";
+  private CompletableFuture<Void> stdoutTask;
+  private CompletableFuture<Void> stderrTask;
 
   /**
    *  @param command Commands to run
@@ -66,19 +71,21 @@ public class CommandRunner {
     InputStream stderr = process.getErrorStream();
 
     // Fit and SlimService
-    new Thread(new OutputReadingRunnable(stdout, new OutputWriter() {
+    stdoutTask = VertxWorkerPool.runDedicated("fitnesse-cmd-stdout-" + System.identityHashCode(this),
+      new OutputReadingRunnable(stdout, new OutputWriter() {
       @Override
       public void write(String output) {
         executionLogListener.stdOut(output);
       }
-    }), "CommandRunner stdOut").start();
-    new Thread(new OutputReadingRunnable(stderr, new OutputWriter() {
+    }));
+    stderrTask = VertxWorkerPool.runDedicated("fitnesse-cmd-stderr-" + System.identityHashCode(this),
+      new OutputReadingRunnable(stderr, new OutputWriter() {
       @Override
       public void write(String output) {
         executionLogListener.stdErr(output);
         setCommandErrorMessage(output);
       }
-    }), "CommandRunner stdErr").start();
+    }));
 
     // Close stdin
     process.getOutputStream().close();
@@ -111,6 +118,7 @@ public class CommandRunner {
   public void join() {
     if (process != null) {
       waitForDeathOf(process);
+      awaitOutputTasks();
       if (isDead(process)) {
         int exitCode = process.exitValue();
         executionLogListener.exitCode(exitCode);
@@ -141,6 +149,22 @@ public class CommandRunner {
       return true;
     } catch (IllegalThreadStateException e) {
       return false;
+    }
+  }
+
+  private void awaitOutputTasks() {
+    waitForOutput(stdoutTask);
+    waitForOutput(stderrTask);
+  }
+
+  private void waitForOutput(CompletableFuture<Void> task) {
+    if (task == null) {
+      return;
+    }
+    try {
+      task.get(Math.max(1, timeout), TimeUnit.SECONDS);
+    } catch (Exception e) {
+      // Ignore output wait timeouts/errors to avoid blocking shutdown.
     }
   }
 

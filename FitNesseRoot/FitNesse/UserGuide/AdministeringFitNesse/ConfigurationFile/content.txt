@@ -10,7 +10,7 @@ See also: CommandLineArguments.
 
 ''motivation:'' Customize the look and feel to match your liking. See WikiTheming for details.
 
-!note FitNesse.ai also supports a per-user theme switcher in the UI. The selection is stored in the !-fitnesse_theme-! cookie and overrides the server default for that browser.
+!note FitNesse.ai supports a per-user theme switcher in the UI. The selection is stored in the !-fitnesse_theme-! cookie and overrides the server default for that browser. Only Tailwind themes are supported by default.
 
 !3 Context root
 ''required property:'' '''!-ContextRoot-! = <root path name>'''

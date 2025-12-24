@@ -16,6 +16,7 @@ import fitnesse.slim.protocol.SlimListBuilder;
 import fitnesse.slim.protocol.SlimSerializer;
 import fitnesse.testsystems.ExecutionLogListener;
 import fitnesse.util.MockSocket;
+import fitnesse.util.VertxWorkerPool;
 
 import static fitnesse.testsystems.slim.SlimCommandRunningClient.resultToMap;
 
@@ -26,7 +27,7 @@ public class InProcessSlimClient implements SlimClient {
   private ClassLoader classLoader;
   private MockSocket socket;
   private PipedOutputStream clientOutput;
-  private Thread slimServerThread;
+  private java.util.concurrent.CompletableFuture<Void> slimServerTask;
   private SlimStreamReader reader;
   private double slimServerVersion;
 
@@ -47,21 +48,20 @@ public class InProcessSlimClient implements SlimClient {
     PipedOutputStream socketOutput = new PipedOutputStream(clientInput);
     reader = new SlimStreamReader(clientInput);
     socket = new MockSocket(socketInput, socketOutput);
-    // Start SlimServer in a separate thread
-
-    slimServerThread = new Thread(new Runnable() {
-      @Override public void run() {
-        try {
-          slimServer.serve(socket);
-          executionLogListener.exitCode(0);
-        } catch (Throwable t) { // NOSONAR
-          // This point is not reached since no errors bubble up this far
-          executionLogListener.exceptionOccurred(t);
-        }
+    // Start SlimServer in a worker thread
+    slimServerTask = VertxWorkerPool.runDedicated("fitnesse-slim-inproc-" + System.identityHashCode(this), () -> {
+      ClassLoader original = Thread.currentThread().getContextClassLoader();
+      try {
+        Thread.currentThread().setContextClassLoader(classLoader);
+        slimServer.serve(socket);
+        executionLogListener.exitCode(0);
+      } catch (Throwable t) { // NOSONAR
+        // This point is not reached since no errors bubble up this far
+        executionLogListener.exceptionOccurred(t);
+      } finally {
+        Thread.currentThread().setContextClassLoader(original);
       }
     });
-    slimServerThread.setContextClassLoader(classLoader);
-    slimServerThread.start();
     connect();
   }
 
@@ -117,13 +117,18 @@ public class InProcessSlimClient implements SlimClient {
   @Override
   public void bye() throws IOException {
     // Close slimServer thread
-    if (slimServerThread.isAlive()) {
+    if (slimServerTask != null && !slimServerTask.isDone()) {
       SlimStreamReader.sendSlimMessage(clientOutput, SlimVersion.BYEMESSAGE);
     }
   }
 
   @Override
   public void kill() {
-    slimServerThread.interrupt();
+    if (socket != null && !socket.isClosed()) {
+      socket.close();
+    }
+    if (slimServerTask != null) {
+      slimServerTask.cancel(true);
+    }
   }
 }

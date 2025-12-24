@@ -124,7 +124,8 @@ public class JavaFormatter extends BaseFormatter implements Closeable {
       addFile(cssDir + "fitnesse.css", "css/fitnesse.css");
       addFile(cssDir + "fitnesse_wiki.css", "css/fitnesse_wiki.css");
       addFile(cssDir + "fitnesse_pages.css", "css/fitnesse_pages.css");
-      addFile(cssDir + "fitnesse_straight.css", "css/fitnesse_straight.css");
+      addFile(cssDir + "fitnesse_tailwind.css", "css/fitnesse_tailwind.css");
+      addFile(cssDir + "fitnesse_tailwind_base.css", "css/fitnesse_tailwind_base.css");
       String javascriptDir = base + "javascript/";
       addFile(javascriptDir + "jquery-3.5.1.min.js", "javascript/jquery-3.5.1.min.js");
       addFile(javascriptDir + "fitnesse.js", "javascript/fitnesse.js");

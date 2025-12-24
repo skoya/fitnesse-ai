@@ -5,13 +5,7 @@ package fitnesse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.ServerSocket;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,35 +14,41 @@ import fitnesse.http.MockResponseSender;
 import fitnesse.http.Request;
 import fitnesse.http.Response;
 import fitnesse.socketservice.SocketService;
+import fitnesse.socketservice.VertxSocketService;
 import fitnesse.util.MockSocket;
 import fitnesse.util.SerialExecutorService;
+import fitnesse.util.VertxWorkerPool;
 
 public class FitNesse {
   private static final Logger LOG = Logger.getLogger(FitNesse.class.getName());
 
   private final FitNesseContext context;
   private final ExecutorService executorService;
-  private volatile SocketService theService;
+  private volatile AutoCloseable theService;
 
   public FitNesse(FitNesseContext context) {
     this.context = context;
-    RejectedExecutionHandler rejectionHandler = new RejectedExecutionHandler() {
-      @Override
-      public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-        LOG.log(Level.WARNING, "Could not handle request. Thread pool is exhausted.");
-      }
-    };
-    this.executorService = new ThreadPoolExecutor(5, this.context.maximumWorkers, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
-            new DaemonThreadFactory(), rejectionHandler);
+    this.executorService = VertxWorkerPool.newExecutor("fitnesse-legacy-worker", this.context.maximumWorkers);
   }
 
   public void start(ServerSocket serverSocket) throws IOException {
     theService = new SocketService(new FitNesseServer(context, executorService), false, serverSocket);
   }
 
+  public void startNetServer(io.vertx.core.net.NetServerOptions options, int port) throws IOException {
+    theService = new VertxSocketService(new FitNesseServer(context, executorService), options, port);
+  }
+
   public synchronized void stop() throws IOException {
     if (theService != null) {
-      theService.close();
+      try {
+        theService.close();
+      } catch (Exception e) {
+        if (e instanceof IOException) {
+          throw (IOException) e;
+        }
+        throw new IOException("Failed to close FitNesse service", e);
+      }
       theService = null;
     }
     if (!executorService.isShutdown()) {
@@ -71,34 +71,6 @@ public class FitNesse {
     response.withoutHttpHeaders();
     MockResponseSender sender = new MockResponseSender(out);
     sender.doSending(response);
-  }
-
-  /**
-   * The default thread factory - creates daemon threads
-   */
-  @SuppressWarnings("removal")
-  static class DaemonThreadFactory implements ThreadFactory {
-    private final ThreadGroup group;
-    private final AtomicInteger threadNumber = new AtomicInteger(1);
-    private final String namePrefix;
-
-    DaemonThreadFactory() {
-      SecurityManager s = System.getSecurityManager();
-      group = (s != null) ? s.getThreadGroup() :
-              Thread.currentThread().getThreadGroup();
-      namePrefix = "server-thread-";
-    }
-
-    @Override
-    public Thread newThread(Runnable r) {
-      Thread t = new Thread(group, r,
-              namePrefix + threadNumber.getAndIncrement(),
-              0);
-      t.setDaemon(true);
-      if (t.getPriority() != Thread.NORM_PRIORITY)
-        t.setPriority(Thread.NORM_PRIORITY);
-      return t;
-    }
   }
 
 }

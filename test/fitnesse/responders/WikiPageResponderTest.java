@@ -73,7 +73,7 @@ public class WikiPageResponderTest {
     assertSubString("<html>", body);
     assertSubString("<body", body);
     assertSubString("child content", body);
-    assertSubString("href=\"ChildPage?whereUsed\"", body);
+    assertSubString("href=\"/ChildPage?whereUsed\"", body);
     assertSubString("Cache-Control: max-age=0", response.makeHttpHeaders());
     assertSubString("<span class=\"tag\">Wiki Page tags</span>", body);
   }
@@ -273,19 +273,19 @@ public class WikiPageResponderTest {
     SimpleResponse response = (SimpleResponse) responder.makeResponse(toolContext, request);
     String body = response.getContent();
 
-    assertSubString("ToolPage?properties", body);
-    assertSubString("ToolPage?whereUsed", body);
-    assertSubString("ToolPage?versions", body);
-    assertSubString("ToolPage?refactor&amp;type=rename", body);
-    assertSubString("ToolPage?refactor&amp;type=move", body);
-    assertSubString("ToolPage?refactor&amp;type=replace", body);
-    assertSubString("ToolPage?deletePage", body);
+    assertSubString("/wiki/ToolPage?properties", body);
+    assertSubString("/wiki/ToolPage?whereUsed", body);
+    assertSubString("/wiki/ToolPage?versions", body);
+    assertSubString("/wiki/ToolPage?refactor&amp;type=rename", body);
+    assertSubString("/wiki/ToolPage?refactor&amp;type=move", body);
+    assertSubString("/wiki/ToolPage?refactor&amp;type=replace", body);
+    assertSubString("/wiki/ToolPage?deletePage", body);
     assertSubString("href=\"/files\"", body);
-    assertSubString("?search", body);
+    assertSubString("href=\"/search\"", body);
     assertSubString("href=\"/wiki/RecentChanges\"", body);
-    assertSubString("?testHistory", body);
-    assertSubString("ToolPage?pageHistory", body);
-    assertSubString("ToolPage?variables", body);
+    assertSubString("/wiki/ToolPage?testHistory", body);
+    assertSubString("/wiki/ToolPage?pageHistory", body);
+    assertSubString("/wiki/ToolPage?variables", body);
     assertSubString("href=\"/wiki/FitNesse.UserGuide\"", body);
   }
 

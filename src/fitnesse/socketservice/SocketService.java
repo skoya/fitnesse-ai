@@ -6,17 +6,22 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import fitnesse.util.VertxWorkerPool;
 
 /**
  * Runs a separate service (thread) to handle new connections.
  */
-public class SocketService {
+public class SocketService implements AutoCloseable {
   private static final Logger LOG = Logger.getLogger(SocketService.class.getName());
 
   private final ServerSocket serverSocket;
-  private final Thread serviceThread;
+  private final CompletableFuture<Void> serviceTask;
+  private final CountDownLatch started = new CountDownLatch(1);
   private volatile boolean running = false;
   private final SocketServer server;
 
@@ -25,16 +30,8 @@ public class SocketService {
   public SocketService(SocketServer server, boolean daemon, ServerSocket serverSocket) throws IOException {
     this.server = server;
     this.serverSocket = serverSocket;
-    serviceThread = new Thread(
-      new Runnable() {
-        @Override
-        public void run() {
-          serviceThread();
-        }
-      }
-    );
-    serviceThread.setDaemon(daemon);
-    serviceThread.start();
+    String name = "fitnesse-socket-service-" + System.identityHashCode(this);
+    this.serviceTask = VertxWorkerPool.runDedicated(name, this::serviceThread);
   }
 
   public void close() throws IOException {
@@ -42,20 +39,27 @@ public class SocketService {
     running = false;
     serverSocket.close();
     try {
-      serviceThread.join();
-    } catch (InterruptedException e) {
-      LOG.log(Level.WARNING, "Thread joining interrupted");
+      serviceTask.get();
+    } catch (Exception e) {
+      LOG.log(Level.WARNING, "Service task join interrupted", e);
       Thread.currentThread().interrupt();
     }
   }
 
   private void waitForServiceThreadToStart() {
-    if (everRan) return;
-    while (!running) Thread.yield();
+    if (everRan) {
+      return;
+    }
+    try {
+      started.await();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
   }
 
   private void serviceThread() {
     running = true;
+    started.countDown();
     while (running) {
       try {
         Socket s = serverSocket.accept();

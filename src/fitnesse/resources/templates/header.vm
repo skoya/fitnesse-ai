@@ -10,10 +10,6 @@
  <select id="theme-select">
   <option value="fitnesse_tailwind">Tailwind</option>
   <option value="fitnesse_tailwind_slate">Tailwind Slate</option>
-  <option value="fitnesse_classic">Classic</option>
-  <option value="fitnesse_mint">Mint</option>
-  <option value="fitnesse_straight">Straight</option>
-  <option value="fitnesse_topnav">Topnav</option>
  </select>
  #if($theme == "fitnesse_tailwind" || $theme == "fitnesse_tailwind_slate")
   <button id="color-mode-toggle" class="mode-toggle" type="button" aria-pressed="false">Dark</button>

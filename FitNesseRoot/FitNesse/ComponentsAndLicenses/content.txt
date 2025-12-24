@@ -15,7 +15,6 @@ FitNesse bundles additional libraries and UI assets. The lists below highlight k
 |Protobuf Java|3.25.5|https://protobuf.dev/|BSD 3-Clause License|
 |Micrometer Prometheus Registry|1.15.6|https://micrometer.io/|Apache License 2.0|
 |Java Diff Utils|1.3.0|https://github.com/java-diff-utils/java-diff-utils|Apache License 2.0|
-|Groovy XML|5.0.3|https://groovy-lang.org/|Apache License 2.0|
 |Nashorn Core|15.7|https://openjdk.org/projects/nashorn/|GPL-2.0 with Classpath Exception|
 
 !2 UI assets
@@ -23,7 +22,5 @@ FitNesse bundles additional libraries and UI assets. The lists below highlight k
 |CodeMirror|4.12|https://codemirror.net/|MIT License|
 |Jasmine|1.3.1|http://jasmine.github.io/|MIT License|
 |jQuery|3.5.1|https://jquery.com/|MIT License|
-|Bootstrap|4.5.3|https://getbootstrap.com/|MIT License|
 |Mousetrap|1.4.6|https://craig.is/killing/mice|MIT License|
-|Respond.js|1.4.0|https://github.com/scottjehl/Respond|MIT/BSD License|
 |Mermaid|bundled (see mermaid.min.js)|https://mermaid.js.org/|MIT License|

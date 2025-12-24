@@ -1,9 +1,14 @@
 package fitnesse.docstore;
 
+import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.file.FileSystem;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -14,6 +19,8 @@ public final class GitDocStore implements DocStore {
   private static final String PROPERTIES_FILE = "properties.xml";
   private static final String ATTACHMENTS_DIR = "files";
 
+  private final Vertx vertx;
+  private final FileSystem fs;
   private final Path repoRoot;
   private final GitRepository git;
   private final String commitMessageTemplate;
@@ -21,14 +28,20 @@ public final class GitDocStore implements DocStore {
   private final GitCommitConfig commitConfig;
 
   public GitDocStore(Path repoRoot) {
-    this(repoRoot, "wiki: update %s", MergeStrategy.fromConfig());
+    this(Vertx.vertx(), repoRoot, "wiki: update %s", MergeStrategy.fromConfig());
   }
 
   public GitDocStore(Path repoRoot, String commitMessageTemplate) {
-    this(repoRoot, commitMessageTemplate, MergeStrategy.fromConfig());
+    this(Vertx.vertx(), repoRoot, commitMessageTemplate, MergeStrategy.fromConfig());
   }
 
   public GitDocStore(Path repoRoot, String commitMessageTemplate, MergeStrategy mergeStrategy) {
+    this(Vertx.vertx(), repoRoot, commitMessageTemplate, mergeStrategy);
+  }
+
+  public GitDocStore(Vertx vertx, Path repoRoot, String commitMessageTemplate, MergeStrategy mergeStrategy) {
+    this.vertx = vertx;
+    this.fs = vertx.fileSystem();
     this.repoRoot = repoRoot;
     this.commitMessageTemplate = commitMessageTemplate;
     this.git = new GitRepository(repoRoot);
@@ -71,15 +84,18 @@ public final class GitDocStore implements DocStore {
   public List<PageRef> listChildren(PageRef ref) {
     Path pageDir = pageDir(ref);
     List<PageRef> children = new ArrayList<>();
-    if (!Files.isDirectory(pageDir)) {
+    if (!isDirectory(pageDir)) {
       return children;
     }
     try {
-      Files.list(pageDir)
-        .filter(Files::isDirectory)
-        .forEach(path -> children.add(new PageRef(ref.wikiPath() + "/" + path.getFileName().toString())));
+      for (String child : fs.readDirBlocking(pageDir.toString())) {
+        if (isDirectory(Path.of(child))) {
+          Path path = Path.of(child);
+          children.add(new PageRef(ref.wikiPath() + "/" + path.getFileName().toString()));
+        }
+      }
       return children;
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new IllegalStateException("Failed to list children for " + ref.wikiPath(), e);
     }
   }
@@ -87,7 +103,7 @@ public final class GitDocStore implements DocStore {
   @Override
   public PageProperties readProperties(PageRef ref) {
     Path propsPath = pageDir(ref).resolve(PROPERTIES_FILE);
-    if (!Files.exists(propsPath)) {
+    if (!fs.existsBlocking(propsPath.toString())) {
       return new PageProperties("");
     }
     return new PageProperties(readIfExists(propsPath));
@@ -97,9 +113,9 @@ public final class GitDocStore implements DocStore {
   public void writeProperties(PageRef ref, PageProperties props) {
     Path propsPath = pageDir(ref).resolve(PROPERTIES_FILE);
     try {
-      Files.createDirectories(propsPath.getParent());
-      Files.writeString(propsPath, safe(props.xml()), StandardCharsets.UTF_8);
-    } catch (IOException e) {
+      fs.mkdirsBlocking(propsPath.getParent().toString());
+      fs.writeFileBlocking(propsPath.toString(), Buffer.buffer(safe(props.xml()), StandardCharsets.UTF_8.name()));
+    } catch (Exception e) {
       throw new IllegalStateException("Failed to write properties for " + ref.wikiPath(), e);
     }
     commitPaths("properties", ref, GitIdentityHolder.current(), propsPath);
@@ -109,15 +125,18 @@ public final class GitDocStore implements DocStore {
   public List<AttachmentRef> listAttachments(PageRef ref) {
     Path attachmentsDir = pageDir(ref).resolve(ATTACHMENTS_DIR);
     List<AttachmentRef> attachments = new ArrayList<>();
-    if (!Files.isDirectory(attachmentsDir)) {
+    if (!isDirectory(attachmentsDir)) {
       return attachments;
     }
     try {
-      Files.list(attachmentsDir)
-        .filter(Files::isRegularFile)
-        .forEach(path -> attachments.add(new AttachmentRef(ref, path.getFileName().toString())));
+      for (String child : fs.readDirBlocking(attachmentsDir.toString())) {
+        if (isRegularFile(Path.of(child))) {
+          Path path = Path.of(child);
+          attachments.add(new AttachmentRef(ref, path.getFileName().toString()));
+        }
+      }
       return attachments;
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new IllegalStateException("Failed to list attachments for " + ref.wikiPath(), e);
     }
   }
@@ -126,8 +145,9 @@ public final class GitDocStore implements DocStore {
   public InputStream readAttachment(AttachmentRef ref) {
     Path attachmentPath = pageDir(ref.pageRef()).resolve(ATTACHMENTS_DIR).resolve(ref.name());
     try {
-      return Files.newInputStream(attachmentPath);
-    } catch (IOException e) {
+      Buffer data = fs.readFileBlocking(attachmentPath.toString());
+      return new ByteArrayInputStream(data.getBytes());
+    } catch (Exception e) {
       throw new IllegalStateException("Failed to read attachment " + ref.name(), e);
     }
   }
@@ -136,9 +156,9 @@ public final class GitDocStore implements DocStore {
   public void writeAttachment(AttachmentRef ref, InputStream data, Metadata meta) {
     Path attachmentPath = pageDir(ref.pageRef()).resolve(ATTACHMENTS_DIR).resolve(ref.name());
     try {
-      Files.createDirectories(attachmentPath.getParent());
-      Files.copy(data, attachmentPath);
-    } catch (IOException e) {
+      fs.mkdirsBlocking(attachmentPath.getParent().toString());
+      fs.writeFileBlocking(attachmentPath.toString(), Buffer.buffer(readAllBytes(data)));
+    } catch (Exception e) {
       throw new IllegalStateException("Failed to write attachment " + ref.name(), e);
     }
     commitPaths("attachment", ref.pageRef(), GitIdentityHolder.current(), attachmentPath);
@@ -159,10 +179,10 @@ public final class GitDocStore implements DocStore {
   }
 
   private void initRepoIfNeeded() {
-    if (!Files.isDirectory(repoRoot.resolve(".git"))) {
+    if (!isDirectory(repoRoot.resolve(".git"))) {
       try {
-        Files.createDirectories(repoRoot);
-      } catch (IOException e) {
+        fs.mkdirsBlocking(repoRoot.toString());
+      } catch (Exception e) {
         throw new IllegalStateException("Failed to create repo directory " + repoRoot, e);
       }
       git.init();
@@ -172,7 +192,7 @@ public final class GitDocStore implements DocStore {
   private void commitPaths(String reason, PageRef ref, GitIdentity author, Path... paths) {
     List<Path> toAdd = new ArrayList<>();
     for (Path path : paths) {
-      if (path != null && Files.exists(path)) {
+      if (path != null && fs.existsBlocking(path.toString())) {
         toAdd.add(path);
       }
     }
@@ -186,12 +206,14 @@ public final class GitDocStore implements DocStore {
 
   private void writeAndCommit(PageRef ref, PageWriteRequest req, Path pageDir) {
     try {
-      Files.createDirectories(pageDir);
-      Files.writeString(pageDir.resolve(CONTENT_FILE), safe(req.content()), StandardCharsets.UTF_8);
+      fs.mkdirsBlocking(pageDir.toString());
+      fs.writeFileBlocking(pageDir.resolve(CONTENT_FILE).toString(),
+        Buffer.buffer(safe(req.content()), StandardCharsets.UTF_8.name()));
       if (req.propertiesXml() != null) {
-        Files.writeString(pageDir.resolve(PROPERTIES_FILE), req.propertiesXml(), StandardCharsets.UTF_8);
+        fs.writeFileBlocking(pageDir.resolve(PROPERTIES_FILE).toString(),
+          Buffer.buffer(req.propertiesXml(), StandardCharsets.UTF_8.name()));
       }
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new IllegalStateException("Failed to write page " + ref.wikiPath(), e);
     }
     commitPaths("page", ref, resolveAuthor(req), pageDir.resolve(CONTENT_FILE), pageDir.resolve(PROPERTIES_FILE));
@@ -287,18 +309,51 @@ public final class GitDocStore implements DocStore {
   }
 
   private String readIfExists(Path path) {
-    if (!Files.exists(path)) {
+    if (!fs.existsBlocking(path.toString())) {
       return "";
     }
     try {
-      return Files.readString(path, StandardCharsets.UTF_8);
-    } catch (IOException e) {
+      Buffer data = fs.readFileBlocking(path.toString());
+      return data.toString(StandardCharsets.UTF_8);
+    } catch (Exception e) {
       throw new IllegalStateException("Failed to read " + path, e);
     }
   }
 
   private String safe(String value) {
     return value == null ? "" : value;
+  }
+
+  private boolean isDirectory(Path path) {
+    if (!fs.existsBlocking(path.toString())) {
+      return false;
+    }
+    try {
+      return fs.propsBlocking(path.toString()).isDirectory();
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private boolean isRegularFile(Path path) {
+    if (!fs.existsBlocking(path.toString())) {
+      return false;
+    }
+    try {
+      return fs.propsBlocking(path.toString()).isRegularFile();
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private byte[] readAllBytes(InputStream in) throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    byte[] buffer = new byte[8192];
+    int read;
+    while ((read = in.read(buffer)) != -1) {
+      out.write(buffer, 0, read);
+    }
+    return out.toByteArray();
   }
 
   private PageHistoryEntry parseLogLine(String line) {

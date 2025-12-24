@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import fitnesse.util.VertxWorkerPool;
+
 public class CommandRunningFitClient extends FitClient {
   private static final Logger LOG = Logger.getLogger(CommandRunningFitClient.class.getName());
   public static int TIMEOUT = 60000;
@@ -110,8 +112,8 @@ public class CommandRunningFitClient extends FitClient {
     private final String[] command;
     private final Map<String, String> environmentVariables;
     private final ExecutionLogListener executionLogListener;
-    private Thread timeoutThread;
-    private Thread earlyTerminationThread;
+    private Long timeoutTimerId;
+    private Long earlyTerminationTimerId;
     private CommandRunner commandRunner;
 
     public OutOfProcessCommandRunner(String[] command, Map<String, String> environmentVariables, ExecutionLogListener executionLogListener) {
@@ -130,10 +132,9 @@ public class CommandRunningFitClient extends FitClient {
     public void start(CommandRunningFitClient fitClient, int port, int ticketNumber) throws IOException {
       makeCommandRunner(port, ticketNumber);
       commandRunner.asynchronousStart();
-      timeoutThread = new Thread(new TimeoutRunnable(fitClient), "FitClient timeout");
-      timeoutThread.start();
-      earlyTerminationThread = new Thread(new EarlyTerminationRunnable(fitClient, commandRunner), "FitClient early termination");
-      earlyTerminationThread.start();
+      timeoutTimerId = VertxWorkerPool.vertx().setTimer(TIMEOUT, id -> new TimeoutRunnable(fitClient).run());
+      earlyTerminationTimerId = VertxWorkerPool.vertx().setTimer(1000, id ->
+        VertxWorkerPool.run(new EarlyTerminationRunnable(fitClient, commandRunner)));
     }
 
     @Override
@@ -149,10 +150,12 @@ public class CommandRunningFitClient extends FitClient {
     }
 
     private void killVigilantThreads() {
-      if (timeoutThread != null)
-        timeoutThread.interrupt();
-      if (earlyTerminationThread != null)
-        earlyTerminationThread.interrupt();
+      if (timeoutTimerId != null) {
+        VertxWorkerPool.vertx().cancelTimer(timeoutTimerId);
+      }
+      if (earlyTerminationTimerId != null) {
+        VertxWorkerPool.vertx().cancelTimer(earlyTerminationTimerId);
+      }
     }
 
     private static class TimeoutRunnable implements Runnable {
@@ -165,17 +168,12 @@ public class CommandRunningFitClient extends FitClient {
 
       @Override
       public void run() {
-        try {
-          Thread.sleep(TIMEOUT);
-          synchronized (this.fitClient) {
-            if (!fitClient.isSuccessfullyStarted()) {
-              fitClient.notify();
-              fitClient.exceptionOccurred(new Exception(
-                  "FitClient communication socket was not received on time"));
-            }
+        synchronized (this.fitClient) {
+          if (!fitClient.isSuccessfullyStarted()) {
+            fitClient.notify();
+            fitClient.exceptionOccurred(new Exception(
+                "FitClient communication socket was not received on time"));
           }
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt(); // remember interrupted
         }
       }
     }
@@ -192,20 +190,20 @@ public class CommandRunningFitClient extends FitClient {
       @Override
       public void run() {
         try {
-          Thread.sleep(1000); // next waitFor() can finish too quickly on Linux!
           commandRunner.waitForCommandToFinish();
-          synchronized (fitClient) {
-            if (!fitClient.isConnectionEstablished()) {
-              fitClient.notify();
-              Exception e = new Exception(
-                      "FitClient external process terminated before a connection could be established");
-              // TODO: use executionLogListener.exceptionOccurred(e)
-              commandRunner.exceptionOccurred(e);
-              fitClient.exceptionOccurred(e);
-            }
-          }
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt(); // remember interrupted
+          return;
+        }
+        synchronized (fitClient) {
+          if (!fitClient.isConnectionEstablished()) {
+            fitClient.notify();
+            Exception e = new Exception(
+                    "FitClient external process terminated before a connection could be established");
+            // TODO: use executionLogListener.exceptionOccurred(e)
+            commandRunner.exceptionOccurred(e);
+            fitClient.exceptionOccurred(e);
+          }
         }
       }
     }
@@ -216,7 +214,7 @@ public class CommandRunningFitClient extends FitClient {
     private final Method testRunnerMethod;
     private final ExecutionLogListener executionLogListener;
     private ClassLoader classLoader;
-    private Thread fastFitServer;
+    private java.util.concurrent.CompletableFuture<Void> fastFitServerTask;
     private MockCommandRunner commandRunner;
 
     public InProcessCommandRunner(Method testRunnerMethod, ExecutionLogListener executionLogListener, ClassLoader classLoader) {
@@ -228,8 +226,7 @@ public class CommandRunningFitClient extends FitClient {
     @Override
     public void start(CommandRunningFitClient fitClient, int port, int ticketNumber) throws IOException {
       String[] arguments = new String[] { "-x", getLocalhostName(), Integer.toString(port), Integer.toString(ticketNumber) };
-      this.fastFitServer = createTestRunnerThread(testRunnerMethod, arguments);
-      this.fastFitServer.start();
+      this.fastFitServerTask = runTestRunner(testRunnerMethod, arguments);
       commandRunner = new MockCommandRunner(executionLogListener);
       commandRunner.asynchronousStart();
     }
@@ -237,32 +234,36 @@ public class CommandRunningFitClient extends FitClient {
     @Override
     public void join() {
       try {
-        fastFitServer.join();
+        if (fastFitServerTask != null) {
+          fastFitServerTask.get();
+        }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt(); // remember interrupted
+      } catch (Exception e) {
+        LOG.log(Level.WARNING, "In-process test runner failed", e);
       }
     }
 
     @Override
     public void kill() {
       commandRunner.kill();
+      if (fastFitServerTask != null) {
+        fastFitServerTask.cancel(true);
+      }
     }
 
-    protected Thread createTestRunnerThread(final Method testRunnerMethod, final String[] args) {
-      Runnable fastFitServerRunnable = new Runnable() {
-        @Override
-        public void run() {
-          try {
-            testRunnerMethod.invoke(null, (Object) args);
-          } catch (IllegalAccessException|InvocationTargetException e) {
-            LOG.log(Level.WARNING, "Could not start in-process test runner", e);
-          }
+    protected java.util.concurrent.CompletableFuture<Void> runTestRunner(final Method testRunnerMethod, final String[] args) {
+      return VertxWorkerPool.runDedicated("fitnesse-fit-inproc-" + System.identityHashCode(this), () -> {
+        ClassLoader original = Thread.currentThread().getContextClassLoader();
+        try {
+          Thread.currentThread().setContextClassLoader(classLoader);
+          testRunnerMethod.invoke(null, (Object) args);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+          LOG.log(Level.WARNING, "Could not start in-process test runner", e);
+        } finally {
+          Thread.currentThread().setContextClassLoader(original);
         }
-      };
-      Thread fitServerThread = new Thread(fastFitServerRunnable);
-      fitServerThread.setContextClassLoader(classLoader);
-      fitServerThread.setDaemon(true);
-      return fitServerThread;
+      });
     }
   }
 

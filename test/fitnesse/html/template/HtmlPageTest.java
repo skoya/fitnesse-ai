@@ -24,7 +24,7 @@ public class HtmlPageTest {
   @Before
   public void setUp() throws Exception {
     Properties properties = new Properties();
-    properties.setProperty(ConfigurationParameter.THEME.getKey(), "fitnesse_straight");
+    properties.setProperty(ConfigurationParameter.THEME.getKey(), "fitnesse_tailwind");
     FitNesseContext context = FitNesseUtil.makeTestContext(properties);
     page = new HtmlPage(context.pageFactory.getVelocityEngine(), "skeleton.vm", "fitnesse_theme", "/");
     html = page.html(null);
@@ -117,9 +117,9 @@ public class HtmlPageTest {
   @Test
   public void testThemeCanBeOverriddenByCookie() throws Exception {
     MockRequest request = new MockRequest();
-    request.addHeader("Cookie", "fitnesse_theme=fitnesse_mint");
+    request.addHeader("Cookie", "fitnesse_theme=fitnesse_tailwind_slate");
     String themed = page.html(request);
-    assertSubString("href=\"/files/fitnesse/css/fitnesse_mint.css\"", themed);
-    assertSubString("src=\"/files/fitnesse/javascript/fitnesse_mint.js\"", themed);
+    assertSubString("href=\"/files/fitnesse/css/fitnesse_tailwind_slate.css\"", themed);
+    assertSubString("src=\"/files/fitnesse/javascript/fitnesse_tailwind_slate.js\"", themed);
   }
 }

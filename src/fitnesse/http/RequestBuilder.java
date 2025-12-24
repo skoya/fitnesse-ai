@@ -208,4 +208,20 @@ public class RequestBuilder {
       this.contentType = contentType;
     }
   }
+
+  public String getMethod() {
+    return method;
+  }
+
+  public String getResource() {
+    return resource;
+  }
+
+  public Map<String, String> getHeaders() {
+    return new HashMap<>(headers);
+  }
+
+  public boolean isGetMethod() {
+    return isGet();
+  }
 }

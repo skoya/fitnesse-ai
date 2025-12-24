@@ -37,10 +37,12 @@ public final class VertxOidcAuthHandler implements Handler<RoutingContext> {
     OAuth2Options options = new OAuth2Options()
       .setSite(issuer)
       .setClientId(clientId);
-    OAuth2Auth oauth2 = OpenIDConnectAuth.discover(vertx, options)
-      .toCompletionStage()
-      .toCompletableFuture()
-      .join();
+    OAuth2Auth oauth2;
+    try {
+      oauth2 = VertxFutures.await(OpenIDConnectAuth.discover(vertx, options), 10, java.util.concurrent.TimeUnit.SECONDS);
+    } catch (Exception e) {
+      throw new IllegalStateException("OIDC discovery failed for issuer " + issuer, e);
+    }
     return new VertxOidcAuthHandler(oauth2, audience);
   }
 

@@ -20,8 +20,18 @@
   --tw-nav-bg: rgba(255, 255, 255, 0.9);
   --tw-glow-teal: rgba(20, 184, 166, 0.18);
   --tw-glow-blue: rgba(56, 189, 248, 0.18);
+  --tw-pass-bg: #dcfce7;
+  --tw-pass-ink: #166534;
+  --tw-fail-bg: #fee2e2;
+  --tw-fail-ink: #991b1b;
+  --tw-error-bg: #fef9c3;
+  --tw-error-ink: #92400e;
+  --tw-ignore-bg: #e2e8f0;
+  --tw-ignore-ink: #475569;
+  --tw-diff-bg: #fecaca;
+  --tw-diff-ink: #7f1d1d;
   --tw-body-font: "Sora", "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
-  --tw-display-font: "Fraunces", "Palatino Linotype", "Book Antiqua", Palatino, serif;
+  --tw-display-font: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, "Times New Roman", serif;
   --tw-mono-font: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
@@ -45,6 +55,16 @@ body[data-color-mode="dark"] {
   --tw-nav-bg: rgba(15, 23, 42, 0.9);
   --tw-glow-teal: rgba(45, 212, 191, 0.2);
   --tw-glow-blue: rgba(59, 130, 246, 0.2);
+  --tw-pass-bg: rgba(34, 197, 94, 0.18);
+  --tw-pass-ink: #86efac;
+  --tw-fail-bg: rgba(239, 68, 68, 0.2);
+  --tw-fail-ink: #fecaca;
+  --tw-error-bg: rgba(250, 204, 21, 0.2);
+  --tw-error-ink: #fde68a;
+  --tw-ignore-bg: rgba(148, 163, 184, 0.2);
+  --tw-ignore-ink: #cbd5f5;
+  --tw-diff-bg: rgba(248, 113, 113, 0.22);
+  --tw-diff-ink: #fecaca;
   color-scheme: dark;
 }
 
@@ -102,10 +122,22 @@ header {
   display: block;
   width: 190px;
   height: 42px;
+  position: relative;
   background-image: url("../images/fitnesse-logo-small.png");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: left center;
+}
+
+#art_niche span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  border: 0;
 }
 
 header ul {
@@ -141,6 +173,7 @@ header h1 {
   margin: 0;
   font-family: var(--tw-display-font);
   font-size: 2.2rem;
+  line-height: 1.2;
   letter-spacing: -0.01em;
 }
 
@@ -267,8 +300,9 @@ nav a:hover {
 
 nav .dropdown-menu {
   position: absolute;
-  top: calc(100% + 6px);
+  top: 100%;
   left: 0;
+  transform: translateY(6px);
   padding: 10px;
   min-width: 200px;
   border-radius: 14px;
@@ -280,6 +314,10 @@ nav .dropdown-menu {
 }
 
 nav li:hover > .dropdown-menu {
+  display: block;
+}
+
+nav li:focus-within > .dropdown-menu {
   display: block;
 }
 
@@ -338,6 +376,69 @@ td {
 th {
   background: var(--tw-surface-muted);
   font-weight: 600;
+}
+
+table.fit_table {
+  border-radius: 10px;
+  border-collapse: collapse;
+  background: var(--tw-surface);
+}
+
+table.fit_table td,
+table.fit_table th {
+  border: 1px solid var(--tw-border);
+  padding: 6px 8px;
+  background: var(--tw-surface);
+  color: var(--tw-ink);
+}
+
+table.diff_table td,
+table.diff_table th {
+  border: 0;
+  padding: 0;
+}
+
+.pass,
+.fail,
+.error,
+.ignore,
+.diff,
+span.pass,
+span.fail,
+span.error,
+span.ignore,
+span.diff {
+  color: var(--tw-ink);
+}
+
+.pass,
+span.pass * {
+  background-color: var(--tw-pass-bg);
+  color: var(--tw-pass-ink);
+}
+
+.fail,
+span.fail * {
+  background-color: var(--tw-fail-bg);
+  color: var(--tw-fail-ink);
+}
+
+.error,
+span.error * {
+  background-color: var(--tw-error-bg);
+  color: var(--tw-error-ink);
+}
+
+.ignore,
+span.ignore * {
+  background-color: var(--tw-ignore-bg);
+  color: var(--tw-ignore-ink);
+}
+
+.diff,
+span.diff {
+  background-color: var(--tw-diff-bg);
+  color: var(--tw-diff-ink);
 }
 
 pre,
@@ -405,6 +506,158 @@ a.button:hover {
 
 #ai-panel {
   border-radius: 16px;
+}
+
+#test-summary,
+#test-summaries,
+#test-action,
+#test-output,
+.alternating_block {
+  font-family: var(--tw-body-font);
+  color: var(--tw-ink);
+}
+
+#test-summary,
+#progressBar {
+  border-radius: 12px;
+  border: 1px solid var(--tw-border);
+  background: var(--tw-surface-muted);
+  padding: 10px 12px;
+  box-shadow: var(--tw-shadow-soft);
+}
+
+#test-summary.pass {
+  background: var(--tw-pass-bg);
+  color: var(--tw-pass-ink);
+  border-color: rgba(22, 101, 52, 0.3);
+}
+
+#test-summary.fail {
+  background: var(--tw-fail-bg);
+  color: var(--tw-fail-ink);
+  border-color: rgba(153, 27, 27, 0.3);
+}
+
+#test-summary.error {
+  background: var(--tw-error-bg);
+  color: var(--tw-error-ink);
+  border-color: rgba(146, 64, 14, 0.3);
+}
+
+#test-summaries h2,
+#test-summaries h3,
+#test-output h2 {
+  font-family: var(--tw-display-font);
+  letter-spacing: -0.01em;
+}
+
+#test-summaries ul li {
+  padding: 4px 0;
+}
+
+#test-summaries a {
+  color: var(--tw-accent-strong);
+}
+
+#test-summaries a:hover {
+  color: var(--tw-accent);
+}
+
+#test-summaries .pass,
+#test-summaries .fail,
+#test-summaries .error,
+#test-summaries .ignore {
+  border-radius: 999px;
+  padding: 4px 10px 4px 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#error-nav {
+  max-width: 1200px;
+  margin: 16px auto 0;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--tw-border);
+  background: var(--tw-panel);
+  box-shadow: var(--tw-shadow-soft);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+#error-nav.hidden {
+  display: none;
+}
+
+#error-nav .title {
+  font-family: var(--tw-display-font);
+  font-weight: 600;
+  color: var(--tw-ink);
+}
+
+#error-nav .btn-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--tw-border);
+  background: var(--tw-surface-muted);
+}
+
+#error-nav .btn,
+#error-nav .btn-default,
+#error-nav .btn-light {
+  border: none;
+  background: var(--tw-accent);
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#error-nav .btn-text {
+  color: var(--tw-muted);
+  font-weight: 600;
+}
+
+#error-nav #error-nav-text {
+  width: 48px;
+  border-radius: 999px;
+  border: 1px solid var(--tw-border);
+  padding: 4px 8px;
+  font-weight: 600;
+  text-align: center;
+  background: var(--tw-panel);
+  color: var(--tw-ink);
+}
+
+.alternating_block {
+  border-radius: 14px;
+  border: 1px solid var(--tw-border);
+  background: var(--tw-panel);
+  box-shadow: var(--tw-shadow-soft);
+  padding: 14px 16px;
+}
+
+.run-status {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--tw-border);
+  background: var(--tw-surface);
+  box-shadow: var(--tw-shadow-soft);
+  font-size: 0.95rem;
+}
+
+.run-status .label {
+  font-weight: 600;
+  color: var(--tw-muted);
+  margin-right: 6px;
 }
 
 @media (max-width: 900px) {

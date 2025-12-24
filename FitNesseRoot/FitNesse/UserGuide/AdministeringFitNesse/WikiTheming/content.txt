@@ -12,27 +12,23 @@ As of April 2012, !-FitNesse-! has a new layout. There are a few reasons for mak
 So here you are, in your new !-FitNesse-!, with a look and feel you're not accustomed to. How to deal with that?
 
 !2 Theming to the rescue
-One of the benefits you'll have from the new layout is that the page L&F is easier to change. !-FitNesse-! comes with a few styles built-in:
+One of the benefits you'll have from the new layout is that the page L&F is easier to change. !-FitNesse-! ships with Tailwind-based themes only:
 
  * ''fitnesse_tailwind'' - the default style (Tailwind-inspired, responsive layout)
- * ''fitnesse_tailwind_slate'' - a cooler Tailwind-inspired variant
- * ''fitnesse_straight'' - a compact style
- * ''fitnesse_mint'' - a classic style
- * ''fitnesse_topnav'' - a minimalistic style
- * ''fitnesse_classic'' - legacy FitNesse styling
- * ''bootstrap'' - uses [[Twitter Bootstrap][http://twitter.github.com/bootstrap]] as a basis for its styling
+ * ''fitnesse_tailwind_slate'' - a darker, cooler Tailwind-inspired variant
 
-''UX update'': !-FitNesse-! now defaults to ''fitnesse_tailwind'' to improve readability and responsiveness on smaller screens. If you prefer a previous look, switch themes from the header drop-down or set the Theme property in !-plugins.properties-!.
+''UX update'': The UI now exposes only Tailwind themes to keep the experience consistent and easier to maintain. The Theme drop-down and !-fitnesse_theme-! cookie still work, but only with Tailwind themes.
+If you previously used ''fitnesse_mint'', ''fitnesse_straight'', ''fitnesse_classic'', ''fitnesse_topnav'', or ''bootstrap'', update your configuration to ''fitnesse_tailwind'' or ''fitnesse_tailwind_slate''.
 
 For all styles the HTML remains the same. The default style can be configured through ''plugins.properties'', !-FitNesse-!'s settings file (this is where you also configure custom symbols). Add the line
 
 {{{
-Theme=fitnesse_mint
+Theme=fitnesse_tailwind
 }}}
 (re)start !-FitNesse-! and the style will have completely changed.
 
 !2 Switching themes in the UI
-FitNesse.ai includes a theme switcher in the page header. Select a theme from the drop-down to apply it immediately. Your selection is stored in a browser cookie named !-fitnesse_theme-! and overrides the server default for that browser.
+FitNesse.ai includes a theme switcher in the page header. Select a Tailwind theme from the drop-down to apply it immediately. Your selection is stored in a browser cookie named !-fitnesse_theme-! and overrides the server default for that browser.
 
 ''UX update'': Tailwind themes now offer a light/dark toggle next to the Theme selector. It starts from your OS preference, then remembers your choice per browser so long sessions stay readable.
 
@@ -100,17 +96,14 @@ Now say you want to create your own style, named ''my-style''. You'll need to cr
 
 The stylesheet can contain just your own styling or a combination of existing styles with your own additions on top of it.
 
-To reuse one of the existing styles as an entry point, create a custom css file and import the base style you like to use, e.g.:
+To reuse one of the existing styles as an entry point, create a custom css file and import a Tailwind theme you like to use, e.g.:
 
 {{{
-@import url(fitnesse_straight.css); 
+@import url(fitnesse_tailwind.css);
 }}}
 
 Now you can simply add custom elements to it.
 For example, changing the logo to something fitting your project can be done by placing a 200 x 37 logo file names ''fitnesse-logo-small.png'' file in files/images/ and then shift-f5 reloading the page.
-
-!3 Create a theme based on Bootstrap
-The Bootstrap theme took a slightly different route. It's using a subfolder for it's resources. The skeleton.vm template  ([[files/fitnesse/bootstrap/templates/skeleton.vm][http://files/fitnesse/bootstrap/templates/skeleton.vm]]) contains the general markup and layout. It also contains references to the other resources used. You can find the resources used to compile the bootstrap style (lesscss templates) in fitnesse.jar: fitnesse/resources/bootstrap/less. Use those as a basis for the custom theme. There are a few more template files that are overwritten by the bootstrap theme. If the theme needs to be reusable, refer (''#parse'') the the bootstrap templates for a start and add your own customisations along the way.
 
 !2 Packaging themes
 It's also possible to distribute themes in jar files (for example if you want to support a corporate theme for all your !-FitNesse-! projects). For that, package the css and javascript in a jar file, like this:

@@ -8,7 +8,7 @@ import fitnesse.FitNesseContext;
 import fitnesse.plugins.PluginException;
 import fitnesse.authentication.Authenticator;
 import fitnesse.authentication.PromiscuousAuthenticator;
-import fitnesse.socketservice.PlainServerSocketFactory;
+import io.vertx.core.net.NetServerOptions;
 import fitnesse.wiki.RecentChangesWikiPage;
 import fitnesse.wiki.WikiPageFactory;
 import fitnesse.wiki.fs.FileSystem;
@@ -29,7 +29,7 @@ public class FitNesseUtil {
 
   public static void startFitnesseWithContext(FitNesseContext context) throws IOException {
     instance = context.fitNesse;
-    instance.start(new PlainServerSocketFactory().createServerSocket(context.port));
+    instance.startNetServer(new NetServerOptions(), context.port);
   }
 
   public static void stopFitnesse() throws IOException {

@@ -41,33 +41,33 @@
         #macro( group $n )#if( $nav_newsection != 0 && $nav_newsection != $n ) class="divider"#end#set( $nav_newsection = $n )#end
         <ul class="dropdown-menu position-absolute">
             #if( $actions.withProperties )
-                <li#group(1)><a class="dropdown-item" href="$localPath?properties" accesskey="p">Properties</a></li>
+                <li#group(1)><a class="dropdown-item" href="${wikiRoot}$localPath?properties" accesskey="p">Properties</a></li>
             #end
             #if( $actions.withWhereUsed )
-                <li#group(1)><a class="dropdown-item" href="$localPath?whereUsed" accesskey="w">Where Used</a></li>
+                <li#group(1)><a class="dropdown-item" href="${wikiRoot}$localPath?whereUsed" accesskey="w">Where Used</a></li>
             #end
             #if( $actions.withVersions )
-                <li#group(1)><a class="dropdown-item" href="$localPath?versions" accesskey="v">Versions</a></li>
+                <li#group(1)><a class="dropdown-item" href="${wikiRoot}$localPath?versions" accesskey="v">Versions</a></li>
             #end
             #if( $actions.withRefactor )
-                <li#group(2)><a class="dropdown-item" href="$localPath?refactor&amp;type=rename">Rename</a></li>
-                <li><a class="dropdown-item" href="$localPath?refactor&amp;type=move">Move</a></li>
-                <li><a class="dropdown-item" href="$localPath?refactor&amp;type=replace">Replace</a></li>
-                <li><a class="dropdown-item" href="$localPath?deletePage">Delete</a></li>
+                <li#group(2)><a class="dropdown-item" href="${wikiRoot}$localPath?refactor&amp;type=rename">Rename</a></li>
+                <li><a class="dropdown-item" href="${wikiRoot}$localPath?refactor&amp;type=move">Move</a></li>
+                <li><a class="dropdown-item" href="${wikiRoot}$localPath?refactor&amp;type=replace">Replace</a></li>
+                <li><a class="dropdown-item" href="${wikiRoot}$localPath?deletePage">Delete</a></li>
             #end
             #if( $actions.withFiles )
                 <li #group(3)><a class="dropdown-item" href="${contextRoot}files" accesskey="f">Files</a></li>
             #end
             #if( $actions.withSearch )
-                <li#group(3)><a class="dropdown-item" href="?search" accesskey="s">Search</a></li>
+                <li#group(3)><a class="dropdown-item" href="${contextRoot}search" accesskey="s">Search</a></li>
             #end
             #if( $actions.withRecentChanges )
                 <li#group(3)><a class="dropdown-item" href="${wikiRoot}RecentChanges" accesskey="">Recent Changes</a></li>
             #end
 
             #if( $actions.testPage || $actions.suitePage )
-                <li#group(4)><a class="dropdown-item" href="?testHistory">Test History</a></li>
-                <li#group(4)><a class="dropdown-item" href="$localPath?pageHistory" accesskey="h">Page History</a></li>
+                <li#group(4)><a class="dropdown-item" href="${wikiRoot}$localPath?testHistory">Test History</a></li>
+                <li#group(4)><a class="dropdown-item" href="${wikiRoot}$localPath?pageHistory" accesskey="h">Page History</a></li>
             #end
             #if( $actions.testPage )
                 <li#group(4)><a class="dropdown-item" href="?test&amp;remote_debug">Remote Debug</a></li>
@@ -77,7 +77,7 @@
             #end
 
             #if( $actions.withVariablesScope )
-                <li#group(5)><a class="dropdown-item" href="$localPath?variables" accesskey="v">Variables</a></li>
+                <li#group(5)><a class="dropdown-item" href="${wikiRoot}$localPath?variables" accesskey="v">Variables</a></li>
             #end
             #if( $actions.withUserGuide )
                 <li#group(6)><a class="dropdown-item" href="${wikiRoot}FitNesse.UserGuide" accesskey="">User Guide</a></li>

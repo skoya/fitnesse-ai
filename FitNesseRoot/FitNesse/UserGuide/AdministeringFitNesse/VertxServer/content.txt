@@ -61,6 +61,10 @@ Plugins are loaded from !style_code(plugins.properties) and Java !-ServiceLoader
 !2 Static files and roots
  * Static handler serves !style_code(/files/fitnesse/*) from !style_code(fitnesse/resources) and !style_code(/files/*) from the wiki !-files-! directory.
  * Keep !style_code(FITNESSE_ROOT_PATH) pointing to the folder that contains !-FitNesseRoot-! (avoid absolute !style_code(/) roots in handler configuration).
+ * Legacy page URLs like !style_code(/SomePage?properties) redirect to !style_code(/wiki/SomePage?properties) so responder query parameters keep working.
+
+!2 Live suite status
+Suite/test pages show a lightweight status panel while runs are active, using the run monitor endpoints. The panel displays the current test (from run logs), queue depth, and completed count, updating every few seconds.
 
 !2 Auth and audit
  * When !style_code(FITNESSE_AUTH_ENABLED=true), routes are protected by the shared policy rules and an auth handler (Basic or OIDC).
