@@ -14,14 +14,15 @@ So here you are, in your new !-FitNesse-!, with a look and feel you're not accus
 !2 Theming to the rescue
 One of the benefits you'll have from the new layout is that the page L&F is easier to change. !-FitNesse-! comes with a few styles built-in:
 
- * ''fitnesse_modern'' - the default style (responsive, card-based layout)
+ * ''fitnesse_tailwind'' - the default style (Tailwind-inspired, responsive layout)
+ * ''fitnesse_tailwind_slate'' - a cooler Tailwind-inspired variant
  * ''fitnesse_straight'' - a compact style
  * ''fitnesse_mint'' - a classic style
  * ''fitnesse_topnav'' - a minimalistic style
  * ''fitnesse_classic'' - legacy FitNesse styling
  * ''bootstrap'' - uses [[Twitter Bootstrap][http://twitter.github.com/bootstrap]] as a basis for its styling
 
-''UX update'': !-FitNesse-! now defaults to ''fitnesse_modern'' to improve readability and responsiveness on smaller screens. If you prefer a previous look, switch themes from the header drop-down or set the Theme property in !-plugins.properties-!.
+''UX update'': !-FitNesse-! now defaults to ''fitnesse_tailwind'' to improve readability and responsiveness on smaller screens. If you prefer a previous look, switch themes from the header drop-down or set the Theme property in !-plugins.properties-!.
 
 For all styles the HTML remains the same. The default style can be configured through ''plugins.properties'', !-FitNesse-!'s settings file (this is where you also configure custom symbols). Add the line
 

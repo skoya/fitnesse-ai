@@ -9,7 +9,8 @@
  <div class="theme-switcher ml-3">
   <label for="theme-select" class="mr-1">Theme</label>
   <select id="theme-select" class="form-control">
-   <option value="fitnesse_modern">Modern</option>
+   <option value="fitnesse_tailwind">Tailwind</option>
+   <option value="fitnesse_tailwind_slate">Tailwind Slate</option>
    <option value="fitnesse_classic">Classic</option>
    <option value="fitnesse_mint">Mint</option>
    <option value="fitnesse_straight">Straight</option>

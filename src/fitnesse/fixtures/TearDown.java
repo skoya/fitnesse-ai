@@ -18,6 +18,7 @@ public class TearDown extends Fixture {
     if (historyDirectory.exists())
       FileUtil.deleteFileSystemDirectory(historyDirectory);
     Clock.restoreDefaultClock();
+    System.clearProperty("INTERNAL_PORT");
     context = null;
   }
 }

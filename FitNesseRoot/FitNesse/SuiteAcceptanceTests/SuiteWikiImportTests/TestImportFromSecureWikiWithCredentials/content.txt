@@ -11,7 +11,7 @@ Create an importing page.
 This !-ImportingPage-! will now import the secure wiki page.  Credentials for accessing the remote wiki are included in the request.
 !|Response Requester.|
 |uri   |valid?|
-|ImportingPage?responder=import&remoteUrl=http://localhost:9123/ImporteePage&remoteUsername=Aladdin&remotePassword=open+sesame|true|
+|ImportingPage?responder=import&remoteUrl=http://localhost:${INTERNAL_PORT}/ImporteePage&remoteUsername=Aladdin&remotePassword=open+sesame|true|
 
 The import should succeed just like normal.
 !|Response Examiner|

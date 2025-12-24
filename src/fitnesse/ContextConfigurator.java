@@ -55,7 +55,7 @@ public class ContextConfigurator {
   private static final int DEFAULT_COMMAND_PORT = 9123;
   public static final int DEFAULT_PORT = 80;
   public static final String DEFAULT_CONFIG_FILE = "plugins.properties";
-  public static final String DEFAULT_THEME = "fitnesse_modern";
+  public static final String DEFAULT_THEME = "fitnesse_tailwind";
   public static final int DEFAULT_MAXIMUM_WORKERS = 100;
 
   /** Some properties are stored in typed fields: */

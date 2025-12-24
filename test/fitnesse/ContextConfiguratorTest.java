@@ -45,13 +45,13 @@ public class ContextConfiguratorTest {
   }
 
   @Test
-  public void modernIsDefaultTheme() throws IOException, PluginException {
+  public void tailwindIsDefaultTheme() throws IOException, PluginException {
     String theme = ContextConfigurator
       .empty()
       .makeFitNesseContext()
       .theme;
 
-    assertThat(theme, is("fitnesse_modern"));
+    assertThat(theme, is("fitnesse_tailwind"));
   }
 
   @Test

@@ -1043,7 +1043,7 @@ public final class FitNesseVertxMain {
   }
 
   private static String renderSearchShellStart(String title, String theme) {
-    String resolvedTheme = theme == null || theme.isEmpty() ? "fitnesse_modern" : theme;
+    String resolvedTheme = theme == null || theme.isEmpty() ? "fitnesse_tailwind" : theme;
     StringBuilder html = new StringBuilder();
     html.append("<!doctype html><html><head><meta charset=\"utf-8\">")
       .append("<title>").append(escapeHtml(title)).append("</title>")
@@ -1129,7 +1129,7 @@ public final class FitNesseVertxMain {
         }
       }
     }
-    return theme == null ? "fitnesse_modern" : theme;
+    return theme == null ? "fitnesse_tailwind" : theme;
   }
 
   private static String sanitizeTheme(String theme) {

@@ -8,15 +8,25 @@
 <div class="theme-switcher">
  <label for="theme-select">Theme</label>
  <select id="theme-select">
-  <option value="fitnesse_modern">Modern</option>
+  <option value="fitnesse_tailwind">Tailwind</option>
+  <option value="fitnesse_tailwind_slate">Tailwind Slate</option>
   <option value="fitnesse_classic">Classic</option>
   <option value="fitnesse_mint">Mint</option>
   <option value="fitnesse_straight">Straight</option>
   <option value="fitnesse_topnav">Topnav</option>
  </select>
+ #if($request.authorizationUsername)
+  <span class="user-badge">User: <a href="$request.resource?account">$request.authorizationUsername</a></span>
+ #end
 </div>
 <h1>#if($pageTitle.Link)<a href="${wikiRoot}$pageTitle.Link">$pageTitle.Title</a>#else$pageTitle.Title#end</h1>
 
-#if($pageTitle.PageTags)<h5> $pageTitle.PageTags</h5>#end
+#if($pageTitle.pageTags)
+<div class="page-tags">
+ #foreach($tag in $!pageTitle.pageTagsArray)
+  <span class="tag">#escape($tag)</span>
+ #end
+</div>
+#end
 
 ##if($pageTitle.PageType)<br/><span class="page_type">$pageTitle.PageType</span>#end
