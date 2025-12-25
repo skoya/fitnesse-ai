@@ -28,7 +28,7 @@ plugins {
   id "groovy"
   id "io.miret.etienne.sass" version "1.6.0"
   id "info.solidsoft.pitest" version "1.19.0-rc.2"
-  id "com.google.protobuf" version "0.9.4"
+  id "com.google.protobuf" version "0.9.6"
 }
 
 group = 'org.fitnesse'
